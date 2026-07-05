@@ -110,4 +110,8 @@ Diagnóstico se falhar:
 ## O que NÃO vem no clone (por design)
 
 - **Memórias pessoais** (`glm-home\memory\`) — o launcher cria o índice vazio no primeiro run; o GLM do novo dono constrói a própria memória. Personalize o começo pedindo a ele: *"salve na sua memória global quem eu sou: ..."*
+- **Overrides pessoais de settings** (`glm-home\settings.local.json`, git-ignored) — se existir, o launcher o injeta por cima do `settings.json` via `--settings`. Por padrão o GLM pede permissão para ações como qualquer Claude Code; quem preferir rodar sem prompts de permissão (por sua conta e risco) cria o arquivo com:
+  ```json
+  { "permissions": { "defaultMode": "bypassPermissions" }, "skipDangerousModePermissionPrompt": true }
+  ```
 - `vendor\` (binários, 230MB — passo 5 recria), `.env` (passo 2), config do router (passo 4), `logs\`, estado de runtime do `glm-home`.

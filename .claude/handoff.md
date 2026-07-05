@@ -4,7 +4,7 @@
 > de forma relativamente detalhada. É o PRIMEIRO arquivo que a próxima sessão lê.
 > Mantenha-o vivo e específico — detalhado o bastante para retomar sem reconstruir o raciocínio.
 
-**Última atualização:** 2026-07-05 (repo agora PÚBLICO no GitHub)
+**Última atualização:** 2026-07-05 (settings.local.json — overrides pessoais git-ignored + LICENSE MIT)
 
 ## REPO PÚBLICO — CONCLUÍDO ✔
 `pedrobraiti/glm-harness` foi tornado **público** após conferência final de segurança: (1) grep de padrões de chave real (sk-proj-/sk-ant-/AIzaSy/nvapi-/ghp_/etc.) em TODOS os commits (`git rev-list --all`) → zero hits reais, só menções ao prefixo `nvapi-` na doc; (2) remoto tem só `master` no mesmo commit pós-expurgo (nenhuma branch/tag velha com o histórico contaminado); (3) `.env`, `glm-home/rules/ESSENTIALS.md` (chaves reais), memórias e `vendor/` fora do git e no .gitignore; (4) templates com placeholder. Reprodutibilidade confirmada: INSTALL.md cobre chave NVIDIA → .env → search&replace de caminhos → ccr → vendor+patch → comando glm → teste. Pendência sugerida ao usuário: adicionar LICENSE (repo sem licença = juridicamente "todos os direitos reservados").
@@ -14,6 +14,16 @@ A pasta foi renomeada de `CC_Kernel` para **`glm-harness`** (`C:\Users\ACS Gamer
 
 ## Onde parei
 **Projeto entregue e funcional, agora com rate limiter.** Cadeia: `glm` → `glm.ps1` → `vendor/glm-claude.exe` (patchado roxo/"GLM Harness") → **`launcher/rate-limiter.mjs` (porta 3457: fila com concorrência limitada; em 429 pausa TODO o tráfego em silêncio e retoma sozinho)** → claude-code-router (3456) → NVIDIA. Config do limiter em `limiter-config.json` (hot-reload); comando `/requisitions` no glm-home mostra/ajusta. Smoke test passou pela cadeia completa; health em `http://127.0.0.1:3457/glm-limiter/health`. Falta: validação visual interativa pelo usuário e ver o limiter sob rajadas reais (o caminho de 429 ainda não foi exercitado ao vivo — só o caminho feliz).
+
+## Override local de settings (adicionado agora) — settings.local.json
+**Motivação:** o settings versionado (`glm-home/settings.json`) tinha `permissions.defaultMode: "bypassPermissions"` + `skipDangerousModePermissionPrompt: true`. Isso vaza para o repo público uma defaults perigosa para qualquer um que clone — quem clona merece o prompt normal de permissão. Movido para **override pessoal git-ignored**: `glm-home/settings.local.json` (já coberto pelo blanket `glm-home/*` no .gitignore — só `settings.json` é un-ignored). Se o arquivo existir, o `glm.ps1` injeta via `--settings <arquivo>` por cima do settings.json versionado (binário patchado E claude global recebem o `--settings`). No settings.json versionado, removi `defaultMode` e `skipDangerousModePermissionPrompt`; quem quiser bypass cria o `settings.local.json` com:
+```json
+{ "permissions": { "defaultMode": "bypassPermissions" }, "skipDangerousModePermissionPrompt": true }
+```
+INSTALL.md documenta isso na seção "O que NÃO vem no clone". **Ainda não validado ao vivo** (próximo passo): rodar `glm` com o arquivo local presente e confirmar que Claude Code aceita `--settings` extra (path absoluto) e aplica o override.
+
+## LICENSE MIT (adicionado agora)
+Repo público estava sem licença → juridicamente "todos os direitos reservados". Adicionado `LICENSE` MIT (`Copyright (c) 2026 Pedro Braiti`). Fechou a pendência sugerida na seção REPO PÚBLICO acima.
 
 ## Contexto mental
 Cadeia completa: `glm` (função no $PROFILE / glm.cmd no npm dir) → `launcher/glm.ps1` (env por-processo: BASE_URL=router:3456, AUTH_TOKEN, MODEL=z-ai/glm-5.2, MAX_THINKING_TOKENS=0, CLAUDE_CONFIG_DIR=glm-home) → `vendor/glm-claude.exe` (Claude Code 2.1.200 npm vendorado, patchado por `launcher/apply-glm-branding.mjs`: "Claude Code"→"GLM Harness" 906x, laranja rgb(215,119,87)→roxo rgb(168,85,247) 9x incl. `clawd_body` do mascote, shimmers 2x+2x — sempre bytes de mesmo comprimento) → claude-code-router 2.0.0 (config `~/.claude-code-router/config.json`, provider nvidia) → `integrate.api.nvidia.com` z-ai/glm-5.2.

@@ -114,13 +114,22 @@ $env:CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"
 $env:CLAUDE_CODE_AUTO_COMPACT_WINDOW = "1000000"
 $env:GLM_CONTEXT_WINDOW = "1000000"
 
+# Overrides LOCAIS de settings (git-ignored): preferencias pessoais que nao
+# devem ir pro GitHub (ex.: permissions.defaultMode=bypassPermissions). Se o
+# arquivo existir, entra por cima do settings.json versionado via --settings.
+$LocalSettings = Join-Path $GlmHome "settings.local.json"
+$ExtraArgs = @()
+if (Test-Path $LocalSettings) {
+    $ExtraArgs = @("--settings", $LocalSettings)
+}
+
 # Binario com branding GLM (roxo + "GLM Harness"), gerado por
 # apply-glm-branding.mjs a partir da copia vendorada. Se nao existir
 # (ex.: clone novo sem `npm install --prefix vendor` + patch), cai no
 # claude global — funciona igual, so sem o visual.
 $GlmExe = Join-Path (Split-Path $PSScriptRoot -Parent) "vendor\glm-claude.exe"
 if (Test-Path $GlmExe) {
-    & $GlmExe @args
+    & $GlmExe @ExtraArgs @args
 } else {
-    claude @args
+    claude @ExtraArgs @args
 }

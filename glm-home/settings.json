@@ -10,7 +10,6 @@
     "DISABLE_ADAPTIVE_THINKING": "1"
   },
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "allow": [
       "mcp__scout",
       "WebSearch",
@@ -47,6 +46,5 @@
     "rust-analyzer-lsp@claude-plugins-official": true,
     "github@claude-plugins-official": true
   },
-  "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": true
+  "tui": "fullscreen"
 }
