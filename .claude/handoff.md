@@ -4,10 +4,10 @@
 > de forma relativamente detalhada. É o PRIMEIRO arquivo que a próxima sessão lê.
 > Mantenha-o vivo e específico — detalhado o bastante para retomar sem reconstruir o raciocínio.
 
-**Última atualização:** 2026-07-05 (renomeação da pasta para glm-harness preparada)
+**Última atualização:** 2026-07-05 (renomeação para glm-harness CONCLUÍDA e validada)
 
-## RENOMEAÇÃO DA PASTA (estado mais fresco)
-O usuário decidiu renomear a pasta do projeto de `CC_Kernel` para **`glm-harness`** (`C:\Users\ACS Gamer\Documents\vscode-local\glm-harness`). TODAS as referências já foram atualizadas para o caminho novo ($PROFILE, glm.cmd no npm dir, glm-home/settings.json, hooks, CLAUDE.md do glm-home, docs, memória global da Claude — inclusive o slug `~\.claude\projects\C--...-glm-harness` já existe como cópia do antigo). O usuário faria o rename físico da pasta logo após fechar a sessão. Se você (sessão nova) está lendo isto de dentro de `glm-harness\`, o rename aconteceu e está tudo consistente; se ainda está em `CC_Kernel\`, o rename ainda não foi feito — nada funciona do `glm` até renomear (as referências apontam pro nome novo). Processos limiter/ccr foram parados para não travar o rename.
+## RENOMEAÇÃO DA PASTA — CONCLUÍDA ✔
+A pasta foi renomeada de `CC_Kernel` para **`glm-harness`** (`C:\Users\ACS Gamer\Documents\vscode-local\glm-harness`) e TUDO foi validado ao vivo depois: launcher subiu router+limiter dos caminhos novos e o GLM respondeu citando o home novo. Referências atualizadas em: $PROFILE, glm.cmd (npm dir), glm-home/settings.json, hooks, CLAUDE.md do glm-home, docs, memória global da Claude (slug novo `C--...-glm-harness` com memória e transcripts copiados do antigo). O slug antigo `C--...-CC-Kernel` ainda existe em `~\.claude\projects` como resíduo — inofensivo, pode ser deletado quando quiser.
 
 ## Onde parei
 **Projeto entregue e funcional, agora com rate limiter.** Cadeia: `glm` → `glm.ps1` → `vendor/glm-claude.exe` (patchado roxo/"GLM Harness") → **`launcher/rate-limiter.mjs` (porta 3457: fila com concorrência limitada; em 429 pausa TODO o tráfego em silêncio e retoma sozinho)** → claude-code-router (3456) → NVIDIA. Config do limiter em `limiter-config.json` (hot-reload); comando `/requisitions` no glm-home mostra/ajusta. Smoke test passou pela cadeia completa; health em `http://127.0.0.1:3457/glm-limiter/health`. Falta: validação visual interativa pelo usuário e ver o limiter sob rajadas reais (o caminho de 429 ainda não foi exercitado ao vivo — só o caminho feliz).
