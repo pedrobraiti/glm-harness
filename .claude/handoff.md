@@ -20,7 +20,7 @@ A pasta foi renomeada de `CC_Kernel` para **`glm-harness`** (`C:\Users\ACS Gamer
 ```json
 { "permissions": { "defaultMode": "bypassPermissions" }, "skipDangerousModePermissionPrompt": true }
 ```
-INSTALL.md documenta isso na seção "O que NÃO vem no clone". **Ainda não validado ao vivo** (próximo passo): rodar `glm` com o arquivo local presente e confirmar que Claude Code aceita `--settings` extra (path absoluto) e aplica o override.
+INSTALL.md documenta isso na seção "O que NÃO vem no clone". **VALIDADO AO VIVO:** uma sessão `glm -p` rodou com o `settings.local.json` presente, o binário aceitou o `--settings` sem erro e o override foi aplicado de fato — em modo print a sessão executou `git add`/`git commit` (o próprio commit `6ccb06b`), o que só é possível com `bypassPermissions` ativo.
 
 ## LICENSE MIT (adicionado agora)
 Repo público estava sem licença → juridicamente "todos os direitos reservados". Adicionado `LICENSE` MIT (`Copyright (c) 2026 Pedro Braiti`). Fechou a pendência sugerida na seção REPO PÚBLICO acima.
