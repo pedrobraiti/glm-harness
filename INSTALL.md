@@ -41,6 +41,8 @@ O repo foi criado em `C:\Users\ACS Gamer\Documents\vscode-local\CC_Kernel`. Faç
 
 Substitua também o nome de usuário nas referências a `$PROFILE`/`%APPDATA%` se aparecerem.
 
+Além disso, o `glm-home\CLAUDE.md` importa `@rules/ESSENTIALS.md`, que **não vem no clone** (é pessoal por máquina: chaves e preferências do dono). Crie um `glm-home\rules\ESSENTIALS.md` próprio (chaves de API do novo dono, particularidades da máquina — sem nunca commitá-lo; já está no `.gitignore`) ou remova a linha do import.
+
 ## Passo 4 — Router (tradutor Anthropic ↔ OpenAI)
 
 ```powershell

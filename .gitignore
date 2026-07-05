@@ -21,6 +21,9 @@ glm-home/hooks/notifications.log
 glm-home/memory/
 glm-home/skills/vizier/memory/
 
+# ESSENTIALS contém CHAVES DE API reais — nunca versionar (cada máquina escreve o seu)
+glm-home/rules/ESSENTIALS.md
+
 # Logs de runtime do limiter
 logs/
 
