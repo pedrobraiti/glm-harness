@@ -84,11 +84,18 @@ if (-not (Test-Path $StateFile)) {
 
 # Primeiro uso: semeia a memoria global do GLM (pessoal -> fica fora do git;
 # um clone novo nasce com o indice vazio e o GLM preenche com o tempo).
+# Nota: este arquivo .ps1 e ASCII puro de proposito (PS 5.1 le .ps1 sem BOM
+# como ANSI); por isso o seed vai sem acentos.
 $MemoryIndex = Join-Path $GlmHome "memory\MEMORY.md"
 if (-not (Test-Path $MemoryIndex)) {
     New-Item -ItemType Directory -Force (Join-Path $GlmHome "memory") | Out-Null
-    "# Índice da memória global do GLM 5.2`n`n> Uma linha por memória, formato ``- [Título](arquivo.md) — gancho``. Nunca coloque o conteúdo da memória aqui — só o ponteiro. Este índice é carregado em toda sessão.`n" |
-        Set-Content -Path $MemoryIndex -Encoding UTF8
+    $seedLines = @(
+        "# Indice da memoria global do GLM 5.2",
+        "",
+        "> Uma linha por memoria, formato '- [Titulo](arquivo.md) - gancho'. Nunca coloque o conteudo da memoria aqui - so o ponteiro. Este indice e carregado em toda sessao.",
+        ""
+    )
+    $seedLines | Set-Content -Path $MemoryIndex -Encoding UTF8
 }
 
 # Menos requisicoes laterais -> menos chance de esbarrar no limite de

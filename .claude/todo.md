@@ -37,5 +37,5 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 - [x] Privacidade no GitHub: glm-home/memory e vizier/memory destracked (ficam só locais); launcher semeia índice de memória vazio no primeiro run
 - [x] INSTALL.md: guia de instalação executável por um Claude Code na máquina de destino (chave NVIDIA = único passo humano) + reference/ccr-config.template.json
 
-## Pendente de validação (bloqueado por 429 da NVIDIA no momento)
-- [ ] Confirmar bypassPermissions ao vivo (teste do whoami ficou preso no bloqueio 429 do free tier — re-testar após silêncio: `glm -p "Run 'whoami' and tell me the output"`)
+- [x] bypassPermissions VALIDADO ao vivo (GLM criou arquivo real no disco sem prompt, verificado externamente); NVIDIA desbloqueou após o silêncio
+- [x] fix: glm.ps1 quebrado por crases/acentos no bloco de seed da memória (arquivo é ASCII puro de propósito — PS 5.1 lê .ps1 sem BOM como ANSI); sintaxe validada com o parser do PS
