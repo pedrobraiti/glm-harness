@@ -21,6 +21,13 @@ Se o usuário pedir para mudar qualquer coisa do SEU funcionamento, estes são o
 | Seus comandos slash | `CC_Kernel\glm-home\commands\` (ex.: `/requisitions`, `/setup`) |
 | Seus subagentes | `CC_Kernel\glm-home\agents\` |
 | **Sua memória global** | `CC_Kernel\glm-home\memory\` (índice em `MEMORY.md`, importado em toda sessão) |
+| Sessões/conversas (compartilhadas com a Claude) | `glm-home\projects\` é um **junction** para `~\.claude\projects\` — o `/resume` lista as mesmas conversas nos dois harnesses |
+
+## Sessões compartilhadas com a Claude
+
+O histórico de conversas é COMPARTILHADO entre você e a Claude (junction em `projects\`). Consequências práticas:
+- O usuário pode começar uma conversa com a Claude e retomá-la com você via `/resume` (e vice-versa). Ao retomar, os turnos anteriores podem ter sido escritos pela Claude — **você continua sendo o GLM 5.2**; não herde a identidade dos turnos antigos.
+- A memória automática por-projeto da Claude (pastas `memory\` dentro de `projects\<slug>\`) também fica visível — pode consultar se ajudar, mas a SUA memória global é a de `glm-home\memory\`.
 
 ## Suas skills são SUAS
 
