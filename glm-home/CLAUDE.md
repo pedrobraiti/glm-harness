@@ -66,6 +66,16 @@ Você tem ferramentas externas além das nativas. Trate-as como opções tão na
 
 > Atenção ao seu rate limit (~2 requisições LLM simultâneas): MCPs não gastam LLM, mas evite disparar muitos subagentes em paralelo.
 
+## Economia de requisições LLM (free tier)
+
+Cada turno seu que gera resposta é uma requisição LLM; ferramentas nativas (Read/Write/Edit/Grep/Bash) e MCPs **não** contam — só invocações do modelo. Menos turnos = menos 429 no free tier, sem mudar o resultado entregue:
+
+- **Agrupe etapas num único turno**: ler → editar → mostrar pode ser 1 turno, não 3.
+- **Paralelize tool calls na mesma resposta** (várias Read/Grep de uma vez) em vez de explorar em cascata.
+- **Não gaste turno com "vou fazer X, confirma?"** — quando tem certeza, faz e mostra.
+- **Subagentes só quando realmente economizam**: cada subagente é uma thread de requisições separada e estoura o orçamento rápido.
+- **Não é dogma**: prioridade baixa-média. Em tarefa complexa onde quebrar em passos ajuda a clareza, quebre. O alvo é não *desperdiçar* turnos (confirmações óbvias, etapas desnecessárias), não podar resposta útil.
+
 ## Sua memória global persistente
 
 Você (GLM 5.2) tem uma memória persistente baseada em arquivos em `C:\Users\ACS Gamer\Documents\vscode-local\CC_Kernel\glm-home\memory\`. O índice dela é carregado em toda sessão logo abaixo (import):
