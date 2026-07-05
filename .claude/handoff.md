@@ -20,7 +20,13 @@ Usuário abre `glm` num terminal novo e confirma o visual roxo/"GLM Harness" e o
 ## Skills do GLM (adicionado por último)
 O glm-home agora tem `skills\` (find-skills, frontend-design, vizier — cópias independentes das do ~/.claude, vizier sem .venv/.git), `commands\` (requisitions, setup) e `agents\` (vizier-research-envoy). O CLAUDE.md de identidade tem seção "Suas skills são SUAS" ensinando que editar/criar skills é em `glm-home\skills\`. Validado em sessão real: o GLM lista as 3 skills e sabe o fluxo de edição. Nota: vizier no glm é referência/edição, não operacional (MCPs scout/valet não registrados no home dele).
 
-## Estado mais recente (instalabilidade + privacidade + limiter v2)
+## Estado FINAL da entrega (statusline + varredura de segurança)
+- **Statusline roxo entregue e testado** (`launcher/glm-statusline.mjs`, registrado no settings do glm-home): `◆ GLM 5.2 │ barra de contexto % (tokens) │ [⏸ 429 · retoma em Xs | fila: N]`. O segmento do limiter só aparece quando há cooldown/fila. **Não gasta requisição de LLM nenhuma**: consulta apenas o health local do limiter (que responde do próprio processo, sem encaminhar nada pra NVIDIA), com timeout de 150ms e falha silenciosa.
+- **Segurança:** descoberto que `glm-home/rules/ESSENTIALS.md` (chaves de API REAIS) tinha sido versionado na paridade de experiência. Removido do índice, adicionado ao .gitignore, e **expurgado do histórico inteiro** (filter-branch em todos os commits + delete de refs/original + reflog expire + gc aggressive + push --force). Verificado limpo: `git grep sk-proj- $(git rev-list --all)` vazio; remoto em `2adeece`. Memórias pessoais idem. HASHES DE COMMIT MUDARAM — se existir algum clone antigo por aí, re-clonar. Rotacionar as chaves é opcional (exposição foi só em repo privado), mas é o padrão-ouro.
+- INSTALL.md orienta o amigo a criar o próprio `glm-home/rules/ESSENTIALS.md` (o import @rules/ESSENTIALS.md não vem no clone).
+- Usuário avisou: se não voltar com feedback, é porque gostou — a entrega está completa e o repo sincronizado.
+
+## Estado anterior (instalabilidade + privacidade + limiter v2)
 - **NVIDIA em bloqueio 429 estendido** pelos testes do dia — o teste de bypassPermissions (whoami) ficou preso e foi abortado. `permissions.defaultMode: "bypassPermissions"` está aplicado no settings do glm-home; **falta só re-testar quando o free tier soltar** (silêncio de alguns minutos).
 - **Limiter v2:** aborta retries quando o cliente desiste (res.on close — órfãos re-contactando estendiam o bloqueio) e cooldown escalonante 1x..4x o cooldownSeconds. Reiniciado com o código novo.
 - **Privacidade:** `glm-home/memory/` e `glm-home/skills/vizier/memory/` destracked do git (locais preservados; história não foi limpa — o usuário dispensou). Launcher agora semeia `memory/MEMORY.md` vazio no primeiro run.
