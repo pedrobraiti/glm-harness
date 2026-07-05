@@ -109,8 +109,19 @@ const server = http.createServer(async (req, res) => {
   const body = await readAll(req);
   const { maxAttempts } = loadConfig();
 
+  // Se o cliente desistir (Ctrl-C, processo morto), abortamos os retries:
+  // requisição órfã re-contactando a NVIDIA só estende o bloqueio 429.
+  let clientGone = false;
+  res.on('close', () => {
+    if (!res.writableEnded) clientGone = true;
+  });
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     await waitCooldown();
+    if (clientGone) {
+      log(`cliente desistiu — abortando retries da requisição (tentativa ${attempt})`);
+      return;
+    }
     await acquireSlot();
     try {
       const upstreamRes = await forward(req, body);
@@ -120,9 +131,13 @@ const server = http.createServer(async (req, res) => {
         const errBody = await readAll(upstreamRes);
         const errText = errBody.toString('utf8');
         if (looksLikeRateLimit(status, errText) && attempt < maxAttempts) {
+          // Cooldown ESCALONANTE: o bloqueio da NVIDIA se estende a cada
+          // contato, então retentar sempre no mesmo intervalo curto pode
+          // perpetuá-lo. 1x, 2x, 3x, 4x (teto) o cooldownSeconds da config.
           const { cooldownSeconds } = loadConfig();
-          cooldownUntil = Date.now() + cooldownSeconds * 1000;
-          log(`429/rate-limit do upstream (tentativa ${attempt}/${maxAttempts}) -> silêncio total por ${cooldownSeconds}s, retomo sozinho`);
+          const escalated = cooldownSeconds * Math.min(attempt, 4);
+          cooldownUntil = Math.max(cooldownUntil, Date.now() + escalated * 1000);
+          log(`429/rate-limit do upstream (tentativa ${attempt}/${maxAttempts}) -> silêncio total por ${escalated}s, retomo sozinho`);
           continue;
         }
         const headers = { ...upstreamRes.headers };

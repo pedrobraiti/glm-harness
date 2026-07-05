@@ -20,6 +20,12 @@ Usuário abre `glm` num terminal novo e confirma o visual roxo/"GLM Harness" e o
 ## Skills do GLM (adicionado por último)
 O glm-home agora tem `skills\` (find-skills, frontend-design, vizier — cópias independentes das do ~/.claude, vizier sem .venv/.git), `commands\` (requisitions, setup) e `agents\` (vizier-research-envoy). O CLAUDE.md de identidade tem seção "Suas skills são SUAS" ensinando que editar/criar skills é em `glm-home\skills\`. Validado em sessão real: o GLM lista as 3 skills e sabe o fluxo de edição. Nota: vizier no glm é referência/edição, não operacional (MCPs scout/valet não registrados no home dele).
 
+## Estado mais recente (instalabilidade + privacidade + limiter v2)
+- **NVIDIA em bloqueio 429 estendido** pelos testes do dia — o teste de bypassPermissions (whoami) ficou preso e foi abortado. `permissions.defaultMode: "bypassPermissions"` está aplicado no settings do glm-home; **falta só re-testar quando o free tier soltar** (silêncio de alguns minutos).
+- **Limiter v2:** aborta retries quando o cliente desiste (res.on close — órfãos re-contactando estendiam o bloqueio) e cooldown escalonante 1x..4x o cooldownSeconds. Reiniciado com o código novo.
+- **Privacidade:** `glm-home/memory/` e `glm-home/skills/vizier/memory/` destracked do git (locais preservados; história não foi limpa — o usuário dispensou). Launcher agora semeia `memory/MEMORY.md` vazio no primeiro run.
+- **INSTALL.md** criado: guia executável por um Claude Code na máquina do amigo (chave NVIDIA em build.nvidia.com = único passo humano; search&replace dos caminhos absolutos; template do ccr em `reference/ccr-config.template.json`).
+
 ## Sessões compartilhadas + /resume cruzado (adicionado por último)
 `glm-home\projects` virou **junction** para `~\.claude\projects` — Claude e GLM veem as mesmas conversas no `/resume`, nos dois sentidos. Validado ao vivo: sessão criada com `claude -p` (codeword ABACAXI-42), retomada com `glm -p --resume <id>` → GLM lembrou o codeword e se manteve GLM. O CLAUDE.md do GLM explica o compartilhamento e manda não herdar identidade de turnos antigos. Atenção futura: transcripts da Claude podem conter blocos de thinking/tool_use que o ccr precisa converter — funcionou no teste; se um resume falhar, suspeitar disso. O junction é recriável com: `New-Item -ItemType Junction -Path glm-home\projects -Target ~\.claude\projects`.
 

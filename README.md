@@ -36,6 +36,10 @@ glm (PowerShell/cmd)
 - **Home próprio (`glm-home/`):** config, histórico e memória global do GLM separados do Claude/Max. O `glm-home/CLAUDE.md` ensina o GLM quem ele é e onde vivem as próprias configurações — dá pra pedir *pro próprio glm* mudar a config dele.
 - **Branding:** `launcher/apply-glm-branding.mjs` gera `vendor/glm-claude.exe` a partir do pacote npm vendorado, trocando (em bytes de mesmo comprimento) `"Claude Code"` → `"GLM Harness"` e o laranja da marca `rgb(215,119,87)` → roxo `rgb(168,85,247)` (inclusive o mascote) + shimmers. O binário do `claude` global não é tocado.
 
+## Instalar numa máquina nova
+
+Veja **[`INSTALL.md`](INSTALL.md)** — guia completo, escrito para ser executado por uma sessão do Claude Code na máquina de destino (só a chave da NVIDIA depende do humano). Memórias pessoais não vêm no clone; cada instalação constrói a sua.
+
 ## Rebuild do zero (máquina nova / update do Claude Code)
 
 ```powershell

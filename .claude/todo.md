@@ -32,3 +32,10 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 - [x] Paridade de experiência com a Claude: rules (ESSENTIALS/BEST_PRACTICES) importadas, hooks Stop+Notification adaptados (paths e branding GLM), plugins copiados (github + rust-analyzer-lsp), MCPs registrados (serena, context7, playwright, scout) — ibkr/crypto (execução de trading) deixados de fora por segurança; settings.json espelhado sem o statusline vibe-ads/spinner de propaganda; validado: 5 MCPs conectados e sessão real respondendo tudo
 - [x] Sessões compartilhadas Claude↔GLM: junction `glm-home\projects` → `~\.claude\projects`; /resume cruzado VALIDADO ao vivo (sessão criada com Claude, retomada pelo GLM com recall do conteúdo); CLAUDE.md do GLM instruído a não herdar identidade dos turnos antigos
 - [x] Mecanismo de comandos validado ao vivo (/requisitions rodou completo no GLM → /setup funciona pelo mesmo mecanismo)
+- [x] bypassPermissions por padrão nas sessões do glm (permissions.defaultMode no settings do glm-home)
+- [x] Limiter v2: aborta retries de cliente que desistiu (órfãos estendiam o bloqueio da NVIDIA) + cooldown escalonante (1x..4x)
+- [x] Privacidade no GitHub: glm-home/memory e vizier/memory destracked (ficam só locais); launcher semeia índice de memória vazio no primeiro run
+- [x] INSTALL.md: guia de instalação executável por um Claude Code na máquina de destino (chave NVIDIA = único passo humano) + reference/ccr-config.template.json
+
+## Pendente de validação (bloqueado por 429 da NVIDIA no momento)
+- [ ] Confirmar bypassPermissions ao vivo (teste do whoami ficou preso no bloqueio 429 do free tier — re-testar após silêncio: `glm -p "Run 'whoami' and tell me the output"`)

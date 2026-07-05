@@ -1,0 +1,20 @@
+{
+  "LOG": true,
+  "PORT": 3456,
+  "API_TIMEOUT_MS": 600000,
+  "Providers": [
+    {
+      "name": "nvidia",
+      "api_base_url": "https://integrate.api.nvidia.com/v1/chat/completions",
+      "api_key": "COLE_SUA_CHAVE_NVAPI_AQUI",
+      "models": ["z-ai/glm-5.2"]
+    }
+  ],
+  "Router": {
+    "default": "nvidia,z-ai/glm-5.2",
+    "background": "nvidia,z-ai/glm-5.2",
+    "think": "nvidia,z-ai/glm-5.2",
+    "longContext": "nvidia,z-ai/glm-5.2",
+    "webSearch": "nvidia,z-ai/glm-5.2"
+  }
+}
