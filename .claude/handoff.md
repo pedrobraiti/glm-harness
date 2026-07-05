@@ -4,7 +4,10 @@
 > de forma relativamente detalhada. É o PRIMEIRO arquivo que a próxima sessão lê.
 > Mantenha-o vivo e específico — detalhado o bastante para retomar sem reconstruir o raciocínio.
 
-**Última atualização:** 2026-07-05 (renomeação para glm-harness CONCLUÍDA e validada)
+**Última atualização:** 2026-07-05 (repo agora PÚBLICO no GitHub)
+
+## REPO PÚBLICO — CONCLUÍDO ✔
+`pedrobraiti/glm-harness` foi tornado **público** após conferência final de segurança: (1) grep de padrões de chave real (sk-proj-/sk-ant-/AIzaSy/nvapi-/ghp_/etc.) em TODOS os commits (`git rev-list --all`) → zero hits reais, só menções ao prefixo `nvapi-` na doc; (2) remoto tem só `master` no mesmo commit pós-expurgo (nenhuma branch/tag velha com o histórico contaminado); (3) `.env`, `glm-home/rules/ESSENTIALS.md` (chaves reais), memórias e `vendor/` fora do git e no .gitignore; (4) templates com placeholder. Reprodutibilidade confirmada: INSTALL.md cobre chave NVIDIA → .env → search&replace de caminhos → ccr → vendor+patch → comando glm → teste. Pendência sugerida ao usuário: adicionar LICENSE (repo sem licença = juridicamente "todos os direitos reservados").
 
 ## RENOMEAÇÃO DA PASTA — CONCLUÍDA ✔
 A pasta foi renomeada de `CC_Kernel` para **`glm-harness`** (`C:\Users\ACS Gamer\Documents\vscode-local\glm-harness`) e TUDO foi validado ao vivo depois: launcher subiu router+limiter dos caminhos novos e o GLM respondeu citando o home novo. Referências atualizadas em: $PROFILE, glm.cmd (npm dir), glm-home/settings.json, hooks, CLAUDE.md do glm-home, docs, memória global da Claude (slug novo `C--...-glm-harness` com memória e transcripts copiados do antigo). O slug antigo `C--...-CC-Kernel` ainda existe em `~\.claude\projects` como resíduo — inofensivo, pode ser deletado quando quiser.

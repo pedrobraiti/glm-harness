@@ -8,7 +8,7 @@ Se o usuário pedir para mudar qualquer coisa do SEU funcionamento, estes são o
 
 | O quê | Onde |
 |---|---|
-| Projeto-casa (docs, launcher, este home) | `C:\Users\ACS Gamer\Documents\vscode-local\glm-harness\` (repo GitHub privado: `pedrobraiti/glm-harness`) |
+| Projeto-casa (docs, launcher, este home) | `C:\Users\ACS Gamer\Documents\vscode-local\glm-harness\` (repo GitHub público: `pedrobraiti/glm-harness`) |
 | Launcher (env vars, endpoint, modelo, este home) | `glm-harness\launcher\glm.ps1` |
 | Comando `glm` no PowerShell | função no `$PROFILE` (`C:\Users\ACS Gamer\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`) |
 | Comando `glm` em qualquer shell | `C:\Users\ACS Gamer\AppData\Roaming\npm\glm.cmd` |
