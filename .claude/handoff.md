@@ -4,10 +4,10 @@
 > de forma relativamente detalhada. É o PRIMEIRO arquivo que a próxima sessão lê.
 > Mantenha-o vivo e específico — detalhado o bastante para retomar sem reconstruir o raciocínio.
 
-**Última atualização:** 2026-07-05 (entrega do núcleo completo: glm funcional + branding)
+**Última atualização:** 2026-07-05 (núcleo + branding + rate limiter entregues)
 
 ## Onde parei
-**Projeto entregue e funcional.** `glm -p` responde como GLM 5.2 via router→NVIDIA, com o binário patchado "GLM Harness" (roxo). Tudo commitado e pushado em `pedrobraiti/glm-harness` (privado). O que falta é só validação visual interativa pelo usuário (abrir `glm` num terminal de verdade e ver o banner roxo/"GLM Harness") e observar o comportamento do free tier da NVIDIA sob rajadas de uma sessão interativa real.
+**Projeto entregue e funcional, agora com rate limiter.** Cadeia: `glm` → `glm.ps1` → `vendor/glm-claude.exe` (patchado roxo/"GLM Harness") → **`launcher/rate-limiter.mjs` (porta 3457: fila com concorrência limitada; em 429 pausa TODO o tráfego em silêncio e retoma sozinho)** → claude-code-router (3456) → NVIDIA. Config do limiter em `limiter-config.json` (hot-reload); comando `/requisitions` no glm-home mostra/ajusta. Smoke test passou pela cadeia completa; health em `http://127.0.0.1:3457/glm-limiter/health`. Falta: validação visual interativa pelo usuário e ver o limiter sob rajadas reais (o caminho de 429 ainda não foi exercitado ao vivo — só o caminho feliz).
 
 ## Contexto mental
 Cadeia completa: `glm` (função no $PROFILE / glm.cmd no npm dir) → `launcher/glm.ps1` (env por-processo: BASE_URL=router:3456, AUTH_TOKEN, MODEL=z-ai/glm-5.2, MAX_THINKING_TOKENS=0, CLAUDE_CONFIG_DIR=glm-home) → `vendor/glm-claude.exe` (Claude Code 2.1.200 npm vendorado, patchado por `launcher/apply-glm-branding.mjs`: "Claude Code"→"GLM Harness" 906x, laranja rgb(215,119,87)→roxo rgb(168,85,247) 9x incl. `clawd_body` do mascote, shimmers 2x+2x — sempre bytes de mesmo comprimento) → claude-code-router 2.0.0 (config `~/.claude-code-router/config.json`, provider nvidia) → `integrate.api.nvidia.com` z-ai/glm-5.2.
@@ -15,7 +15,7 @@ Cadeia completa: `glm` (função no $PROFILE / glm.cmd no npm dir) → `launcher
 Decisões/aprendizados importantes: (1) o pacote npm ≥2.1.x é só wrapper de binário nativo — o patch é binário, não em cli.js; (2) sem ANTHROPIC_MODEL o GLM se apresentava como "Claude Fable 5" (obedecia ao system prompt); (3) roteamento provado por falsificação (porta morta → ConnectionRefused), pois o log do ccr fica vazio; (4) 400 `reasoning` da NVIDIA resolvido desligando thinking no cliente (GLM já pensa em max no servidor).
 
 ## Próximo passo concreto
-Pedir ao usuário para abrir `glm` num terminal novo (o $PROFILE precisa ser recarregado: novo terminal ou `. $PROFILE`) e confirmar: banner "GLM Harness" roxo, mascote roxo, sessão respondendo como GLM. Depois, uso real para calibrar o quanto o limite de concorrência ~2 da NVIDIA incomoda.
+Duas pendências de limpeza: (1) o usuário precisa rodar `gh auth refresh -h github.com -s delete_repo` (interativo) e depois `gh repo delete pedrobraiti/OpenSource-LLM-on-ClaudeCode --yes` — o token atual não tem o escopo; (2) a raiz vazia `..\OS-CC-MCP` está presa por um handle de outro processo (conteúdo já foi apagado) — remover quando liberar. Depois: usuário abre `glm` num terminal novo e confirma o visual roxo/"GLM Harness" e o comportamento do limiter em uso real.
 
 ## Em aberto / armadilhas
 - **Trust dialog:** o glm-home é novo — na primeira sessão interativa em cada pasta o harness vai perguntar "do you trust this folder?" de novo (estado por-home). Normal.

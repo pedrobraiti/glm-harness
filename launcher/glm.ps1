@@ -7,16 +7,20 @@
 # variáveis e continua na assinatura Max.
 
 $RouterUrl = "http://127.0.0.1:3456"
+$LimiterUrl = "http://127.0.0.1:3457"
+$ProjectRoot = Split-Path $PSScriptRoot -Parent
 
-function Test-RouterUp {
+function Test-HttpUp([string]$Url) {
     try {
-        Invoke-WebRequest -Uri $RouterUrl -UseBasicParsing -TimeoutSec 2 | Out-Null
+        Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2 | Out-Null
         return $true
     } catch {
         # Qualquer resposta HTTP (mesmo 404) significa que o servidor está de pé
         return ($null -ne $_.Exception.Response)
     }
 }
+function Test-RouterUp { Test-HttpUp $RouterUrl }
+function Test-LimiterUp { Test-HttpUp "$LimiterUrl/glm-limiter/health" }
 
 if (-not (Test-RouterUp)) {
     Write-Host "[glm] Subindo o claude-code-router..." -ForegroundColor DarkGray
@@ -32,11 +36,34 @@ if (-not (Test-RouterUp)) {
     Write-Host "[glm] Router pronto." -ForegroundColor DarkGray
 }
 
+if (-not (Test-LimiterUp)) {
+    Write-Host "[glm] Subindo o rate limiter..." -ForegroundColor DarkGray
+    $LogDir = Join-Path $ProjectRoot "logs"
+    if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
+    Start-Process -FilePath "node" -ArgumentList "`"$PSScriptRoot\rate-limiter.mjs`"" -WindowStyle Hidden `
+        -RedirectStandardOutput (Join-Path $LogDir "limiter.log") `
+        -RedirectStandardError (Join-Path $LogDir "limiter-err.log")
+    $deadline = (Get-Date).AddSeconds(15)
+    while (-not (Test-LimiterUp)) {
+        if ((Get-Date) -gt $deadline) {
+            Write-Host "[glm] ERRO: o rate limiter nao subiu em 15s. Veja logs\limiter-err.log" -ForegroundColor Red
+            exit 1
+        }
+        Start-Sleep -Milliseconds 300
+    }
+    Write-Host "[glm] Rate limiter pronto." -ForegroundColor DarkGray
+}
+
 # Credencial de gateway: escopo deste processo. O router local nao valida o
 # token (sem APIKEY na config), mas a presenca dele garante que este processo
-# NAO usa a assinatura Max.
-$env:ANTHROPIC_BASE_URL = $RouterUrl
+# NAO usa a assinatura Max. O trafego passa pelo rate limiter (fila +
+# pausa/retomada automatica em 429), que encaminha ao router.
+$env:ANTHROPIC_BASE_URL = $LimiterUrl
 $env:ANTHROPIC_AUTH_TOKEN = "glm-local"
+
+# Timeout folgado do lado do cliente: durante um cooldown de 429 a requisicao
+# fica presa na fila do limiter e conclui sozinha depois.
+$env:API_TIMEOUT_MS = "600000"
 
 # Identidade verdadeira: sem isso o system prompt do Claude Code diria ao GLM
 # que ele e um modelo Claude (e ele acreditaria). O router roteia qualquer

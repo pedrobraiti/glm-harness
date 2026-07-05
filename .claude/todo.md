@@ -3,12 +3,13 @@
 Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 
 ## Em progresso
-(nada — núcleo entregue)
+(nada — núcleo + rate limiter entregues)
 
 ## Próximas
-- [ ] Teste interativo real (sessão `glm` aberta pelo usuário): confirmar visual roxo/"GLM Harness" e observar se rajadas da sessão tomam 429 da NVIDIA
+- [ ] Teste interativo real (sessão `glm` aberta pelo usuário): confirmar visual roxo/"GLM Harness" e observar o limiter sob rajadas reais
+- [ ] Deletar repo antigo `pedrobraiti/OpenSource-LLM-on-ClaudeCode` — bloqueado: o `gh` precisa do escopo `delete_repo`; o usuário deve rodar `gh auth refresh -h github.com -s delete_repo` e depois `gh repo delete pedrobraiti/OpenSource-LLM-on-ClaudeCode --yes`
+- [ ] Remover a raiz vazia `..\OS-CC-MCP` (conteúdo já apagado; raiz presa por outro processo — some ao fechar o processo que a segura)
 - [ ] Se o free tier sufocar no uso real: migrar o router pro endpoint pago da z.ai (Caminho A) — só trocar provider/chave na config do ccr
-- [ ] Deletar repo antigo `pedrobraiti/OpenSource-LLM-on-ClaudeCode` e pasta `..\OS-CC-MCP` (autorizado no briefing §6, ainda não executado)
 
 ## Concluído
 - [x] Setup inicial do projeto (.claude/, git, repo privado `pedrobraiti/glm-harness`)
@@ -23,3 +24,5 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 - [x] Prova de isolamento: BASE_URL honrado por-processo (porta morta → ConnectionRefused); `claude` sem env vars segue no Max
 - [x] Branding GLM Harness: binário vendorado patchado (roxo #A855F7 + "GLM Harness", mascote roxo) via `apply-glm-branding.mjs`; launcher usa o binário patchado com fallback pro claude global
 - [x] README reescrito com uso real, arquitetura e rebuild
+- [x] Rate limiter (`launcher/rate-limiter.mjs`, porta 3457): fila com concorrência limitada, pausa total em 429 e retomada automática; config hot-reload em `limiter-config.json`; comando `/requisitions` no glm-home; launcher integra e sobe sozinho
+- [x] Apagar conteúdo da pasta antiga `..\OS-CC-MCP` (raiz vazia ficou presa por handle de outro processo)

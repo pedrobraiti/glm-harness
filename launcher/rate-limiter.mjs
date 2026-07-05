@@ -1,0 +1,171 @@
+// Rate limiter do GLM Harness — proxy fino entre o Claude Code e o
+// claude-code-router, feito para o free tier da NVIDIA (~2 requisições em
+// voo; o bloqueio 429 se ESTENDE a cada novo contato).
+//
+// Comportamento:
+// - Fila com limite de concorrência (maxConcurrent): o excesso espera, nada
+//   é descartado.
+// - Ao receber 429 do upstream: pausa TODO o tráfego (silêncio total) por
+//   cooldownSeconds e retenta sozinho — a sessão do Claude Code só percebe
+//   uma requisição demorada; nenhum "continue" manual é necessário.
+// - Config em ../limiter-config.json, hot-reload (lida a cada decisão), então
+//   o comando /requisitions ajusta limites sem reiniciar nada.
+//
+// Uso: node rate-limiter.mjs   (o glm.ps1 sobe isso sozinho)
+
+import http from 'node:http';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const configPath = join(here, '..', 'limiter-config.json');
+
+const PORT = 3457;
+const UPSTREAM = { host: '127.0.0.1', port: 3456 };
+const DEFAULTS = { maxConcurrent: 2, cooldownSeconds: 75, maxAttempts: 12 };
+
+function loadConfig() {
+  try {
+    return { ...DEFAULTS, ...JSON.parse(readFileSync(configPath, 'utf8')) };
+  } catch {
+    return { ...DEFAULTS };
+  }
+}
+
+function log(message) {
+  console.log(`[limiter ${new Date().toISOString()}] ${message}`);
+}
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Semáforo com limite relido a cada despacho (hot-reload do maxConcurrent).
+let inFlight = 0;
+const waiters = [];
+
+function dispatchWaiters() {
+  while (inFlight < loadConfig().maxConcurrent && waiters.length > 0) {
+    inFlight++;
+    waiters.shift()();
+  }
+}
+
+function acquireSlot() {
+  return new Promise(resolve => {
+    waiters.push(resolve);
+    dispatchWaiters();
+  });
+}
+
+function releaseSlot() {
+  inFlight--;
+  dispatchWaiters();
+}
+
+// Cooldown global: enquanto ativo, NENHUMA requisição toca o upstream
+// (contato durante o 429 estende o bloqueio da NVIDIA).
+let cooldownUntil = 0;
+
+async function waitCooldown() {
+  while (Date.now() < cooldownUntil) {
+    await sleep(Math.min(cooldownUntil - Date.now(), 1000));
+  }
+}
+
+function forward(req, body) {
+  return new Promise((resolve, reject) => {
+    const upstreamReq = http.request(
+      {
+        host: UPSTREAM.host,
+        port: UPSTREAM.port,
+        path: req.url,
+        method: req.method,
+        headers: { ...req.headers, host: `${UPSTREAM.host}:${UPSTREAM.port}` },
+      },
+      resolve,
+    );
+    upstreamReq.on('error', reject);
+    upstreamReq.end(body);
+  });
+}
+
+async function readAll(stream) {
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  return Buffer.concat(chunks);
+}
+
+function looksLikeRateLimit(status, bodyText) {
+  return status === 429 || /"?429"?|rate.?limit/i.test(bodyText);
+}
+
+const server = http.createServer(async (req, res) => {
+  if (req.url === '/glm-limiter/health') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, inFlight, queued: waiters.length, cooldownUntil }));
+    return;
+  }
+
+  const body = await readAll(req);
+  const { maxAttempts } = loadConfig();
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    await waitCooldown();
+    await acquireSlot();
+    try {
+      const upstreamRes = await forward(req, body);
+      const status = upstreamRes.statusCode;
+
+      if (status === 429 || status >= 500) {
+        const errBody = await readAll(upstreamRes);
+        const errText = errBody.toString('utf8');
+        if (looksLikeRateLimit(status, errText) && attempt < maxAttempts) {
+          const { cooldownSeconds } = loadConfig();
+          cooldownUntil = Date.now() + cooldownSeconds * 1000;
+          log(`429/rate-limit do upstream (tentativa ${attempt}/${maxAttempts}) -> silêncio total por ${cooldownSeconds}s, retomo sozinho`);
+          continue;
+        }
+        const headers = { ...upstreamRes.headers };
+        delete headers['content-length'];
+        delete headers['transfer-encoding'];
+        res.writeHead(status, headers);
+        res.end(errBody);
+        return;
+      }
+
+      res.writeHead(status, upstreamRes.headers);
+      upstreamRes.pipe(res);
+      await new Promise(resolve => {
+        upstreamRes.on('end', resolve);
+        upstreamRes.on('close', resolve);
+      });
+      return;
+    } catch (err) {
+      if (attempt >= maxAttempts) {
+        res.writeHead(502, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: { type: 'api_error', message: `glm-limiter: upstream inacessível: ${err.message}` } }));
+        return;
+      }
+      log(`erro de conexão com o router (tentativa ${attempt}/${maxAttempts}): ${err.message}`);
+      await sleep(1000);
+    } finally {
+      releaseSlot();
+    }
+  }
+
+  res.writeHead(429, { 'content-type': 'application/json' });
+  res.end(JSON.stringify({ error: { type: 'rate_limit_error', message: 'glm-limiter: tentativas esgotadas; NVIDIA ainda bloqueando' } }));
+});
+
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    log(`porta ${PORT} já em uso — outro limiter rodando. Saindo.`);
+    process.exit(0);
+  }
+  throw err;
+});
+
+server.listen(PORT, '127.0.0.1', () => {
+  const cfg = loadConfig();
+  log(`escutando em http://127.0.0.1:${PORT} -> router :${UPSTREAM.port} (maxConcurrent=${cfg.maxConcurrent}, cooldown=${cfg.cooldownSeconds}s)`);
+});

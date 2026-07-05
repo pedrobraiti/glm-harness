@@ -19,17 +19,19 @@ O comando existe como função no `$PROFILE` do PowerShell e como `glm.cmd` em `
 ```
 glm (PowerShell/cmd)
  └─ launcher/glm.ps1          seta env vars SÓ neste processo:
-     ANTHROPIC_BASE_URL=http://127.0.0.1:3456   (router local)
+     ANTHROPIC_BASE_URL=http://127.0.0.1:3457   (rate limiter local)
      ANTHROPIC_AUTH_TOKEN=glm-local              (garante que o Max não é usado)
      ANTHROPIC_MODEL=z-ai/glm-5.2                (identidade verdadeira)
      MAX_THINKING_TOKENS=0                       (NVIDIA rejeita `reasoning`)
      CLAUDE_CONFIG_DIR=glm-home\                 (home próprio, separado do ~/.claude)
      └─ vendor/glm-claude.exe  Claude Code 2.1.200 patchado (roxo + "GLM Harness")
-         └─ claude-code-router (porta 3456)      traduz Anthropic ↔ OpenAI
-             └─ NVIDIA integrate.api.nvidia.com  z-ai/glm-5.2 (free tier)
+         └─ launcher/rate-limiter.mjs (porta 3457)  fila + pausa/retomada em 429
+             └─ claude-code-router (porta 3456)      traduz Anthropic ↔ OpenAI
+                 └─ NVIDIA integrate.api.nvidia.com  z-ai/glm-5.2 (free tier)
 ```
 
 - **Isolamento:** as env vars morrem com o processo do `glm`. Um `claude` aberto em paralelo nunca as vê (provado: BASE_URL numa porta morta → ConnectionRefused só no processo com a var).
+- **Rate limiter (`launcher/rate-limiter.mjs`):** feito sob medida pro free tier da NVIDIA. Fila com limite de concorrência (nada é descartado); ao tomar um 429, **pausa TODO o tráfego em silêncio total** (contato durante o bloqueio o estende) e **retoma sozinho** após o cooldown — a sessão só percebe uma resposta demorada, sem "continue" manual. Config em `limiter-config.json` (**hot-reload** — editar já vale): `maxConcurrent` (default 2), `cooldownSeconds` (default 75), `maxAttempts` (default 12). Dentro do `glm`, o comando **`/requisitions`** mostra/ajusta esses limites (`/requisitions 1`, `/requisitions 1 90`). Estado vivo: `http://127.0.0.1:3457/glm-limiter/health`; logs em `logs/limiter.log`.
 - **Router:** [claude-code-router](https://github.com/musistudio/claude-code-router) v2.0.0, config em `~/.claude-code-router/config.json` (provider `nvidia` + chave). Serviço: `ccr status` / `ccr restart`. O launcher sobe o serviço sozinho se estiver fora do ar.
 - **Home próprio (`glm-home/`):** config, histórico e memória global do GLM separados do Claude/Max. O `glm-home/CLAUDE.md` ensina o GLM quem ele é e onde vivem as próprias configurações — dá pra pedir *pro próprio glm* mudar a config dele.
 - **Branding:** `launcher/apply-glm-branding.mjs` gera `vendor/glm-claude.exe` a partir do pacote npm vendorado, trocando (em bytes de mesmo comprimento) `"Claude Code"` → `"GLM Harness"` e o laranja da marca `rgb(215,119,87)` → roxo `rgb(168,85,247)` (inclusive o mascote) + shimmers. O binário do `claude` global não é tocado.

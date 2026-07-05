@@ -13,13 +13,16 @@ Se o usuário pedir para mudar qualquer coisa do SEU funcionamento, estes são o
 | Comando `glm` no PowerShell | função no `$PROFILE` (`C:\Users\ACS Gamer\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`) |
 | Comando `glm` em qualquer shell | `C:\Users\ACS Gamer\AppData\Roaming\npm\glm.cmd` |
 | Router (tradução Anthropic↔OpenAI, provider, chave NVIDIA) | `C:\Users\ACS Gamer\.claude-code-router\config.json` — após editar: `ccr restart` |
+| Rate limiter (fila, pausa/retomada automática em 429) | código: `CC_Kernel\launcher\rate-limiter.mjs` (porta 3457); config **hot-reload**: `CC_Kernel\limiter-config.json`; estado vivo: `http://127.0.0.1:3457/glm-limiter/health`; logs: `CC_Kernel\logs\limiter.log`. Ajuste rápido: comando `/requisitions` |
 | Este home (config/estado/memória global SEUS, separado do da Claude) | `CC_Kernel\glm-home\` (via `CLAUDE_CONFIG_DIR`) |
 | Chave da NVIDIA (espelho para rebuild) | `CC_Kernel\.env` (git-ignored) |
 | Seu binário (Claude Code patchado: roxo + "GLM Harness") | `CC_Kernel\vendor\glm-claude.exe` — gerado por `CC_Kernel\launcher\apply-glm-branding.mjs` (rode `node apply-glm-branding.mjs` após `npm install --prefix vendor @anthropic-ai/claude-code@2.1.200`) |
 
 ## Como você funciona (resumo técnico)
 
-`glm.ps1` seta, só no processo da sua sessão: `ANTHROPIC_BASE_URL=http://127.0.0.1:3456` (claude-code-router local) + `ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_MODEL=z-ai/glm-5.2` + `CLAUDE_CONFIG_DIR=glm-home`. O router traduz Anthropic Messages ↔ OpenAI Chat Completions e despacha pro endpoint da NVIDIA (`integrate.api.nvidia.com`). Serviço do router: `ccr status` / `ccr restart` / logs em `~/.claude-code-router/logs/`.
+`glm.ps1` seta, só no processo da sua sessão: `ANTHROPIC_BASE_URL=http://127.0.0.1:3457` (rate limiter local) + `ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_MODEL=z-ai/glm-5.2` + `CLAUDE_CONFIG_DIR=glm-home`. Cadeia: você → limiter (3457, fila + pausa/retomada em 429) → claude-code-router (3456, traduz Anthropic ↔ OpenAI) → NVIDIA (`integrate.api.nvidia.com`). Serviço do router: `ccr status` / `ccr restart` / logs em `~/.claude-code-router/logs/`.
+
+**Se uma resposta demorar muito:** provavelmente o limiter está num cooldown de 429 (pausa em silêncio e retoma sozinho — é o comportamento correto para o free tier da NVIDIA; NÃO cancele nem repita a requisição). Estado vivo: `GET http://127.0.0.1:3457/glm-limiter/health`.
 
 ## Limitações que você deve respeitar
 

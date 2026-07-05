@@ -1,0 +1,5 @@
+{
+  "maxConcurrent": 2,
+  "cooldownSeconds": 75,
+  "maxAttempts": 12
+}
