@@ -39,3 +39,4 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 
 - [x] bypassPermissions VALIDADO ao vivo (GLM criou arquivo real no disco sem prompt, verificado externamente); NVIDIA desbloqueou após o silêncio
 - [x] fix: glm.ps1 quebrado por crases/acentos no bloco de seed da memória (arquivo é ASCII puro de propósito — PS 5.1 lê .ps1 sem BOM como ANSI); sintaxe validada com o parser do PS
+- [x] Statusline roxo (launcher/glm-statusline.mjs): modelo + barra de contexto (cores por faixa: lilás/amarelo/vermelho) + estado do limiter só quando relevante (cooldown 429 com contagem regressiva / fila); testado com payloads simulados e mock de cooldown
