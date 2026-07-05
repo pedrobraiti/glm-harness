@@ -22,23 +22,52 @@ async function readStdin() {
 // então calculamos a porcentagem por conta própria a partir dos tokens usados).
 const WINDOW_SIZE = Number(process.env.GLM_CONTEXT_WINDOW || 1000000);
 
+// O router não propaga o usage no modo streaming (chega tudo zerado), então
+// quando os tokens oficiais forem 0 estimamos pelo transcript da sessão:
+// caracteres de conteúdo / 4 + custo fixo do sistema (system prompt + tools).
+const SYSTEM_OVERHEAD_TOKENS = 25000;
+
+async function estimateFromTranscript(transcriptPath) {
+  try {
+    const { readFile } = await import('node:fs/promises');
+    const lines = (await readFile(transcriptPath, 'utf8')).split('\n');
+    let chars = 0;
+    for (const line of lines) {
+      try {
+        const content = JSON.parse(line)?.message?.content;
+        if (content) chars += JSON.stringify(content).length;
+      } catch { /* linha não-JSON */ }
+    }
+    return chars > 0 ? Math.round(chars / 4) + SYSTEM_OVERHEAD_TOKENS : 0;
+  } catch {
+    return 0;
+  }
+}
+
 function formatTokens(tokens) {
   if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1).replace('.0', '')}M`;
   return `${Math.round(tokens / 1000)}k`;
 }
 
-function contextSegment(data) {
+async function contextSegment(data) {
   const ctx = data.context_window || {};
   const reportedSize = ctx.context_window_size || 200000;
-  const used = ctx.total_input_tokens
+  let used = ctx.total_input_tokens
     ?? Math.round(((ctx.used_percentage ?? 0) / 100) * reportedSize);
-  const pct = Math.min(100, Math.max(0, Math.round((used / WINDOW_SIZE) * 100)));
+  let estimated = false;
 
+  if (!used && data.transcript_path) {
+    used = await estimateFromTranscript(data.transcript_path);
+    estimated = used > 0;
+  }
+
+  const pct = Math.min(100, Math.max(0, Math.round((used / WINDOW_SIZE) * 100)));
   const filled = Math.round(pct / 10);
   const bar = '▓'.repeat(filled) + '░'.repeat(10 - filled);
   const barColor = pct >= 90 ? RED : pct >= 70 ? YELLOW : LILAC;
+  const tilde = estimated ? '~' : '';
 
-  return `${barColor}${bar}${RESET} ${pct}% ${DIM}(${formatTokens(used)}/${formatTokens(WINDOW_SIZE)})${RESET}`;
+  return `${barColor}${bar}${RESET} ${tilde}${pct}% ${DIM}(${tilde}${formatTokens(used)}/${formatTokens(WINDOW_SIZE)})${RESET}`;
 }
 
 async function limiterSegment() {
@@ -72,7 +101,7 @@ const modelName = data.model?.id === 'z-ai/glm-5.2' || data.model?.display_name 
 
 const parts = [
   `${PURPLE}◆ ${modelName}${RESET}`,
-  contextSegment(data),
+  await contextSegment(data),
 ];
 
 const limiter = await limiterSegment();

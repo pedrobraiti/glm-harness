@@ -66,6 +66,11 @@ Você tem ferramentas externas além das nativas. Trate-as como opções tão na
 
 > Atenção ao seu rate limit (~2 requisições LLM simultâneas): MCPs não gastam LLM, mas evite disparar muitos subagentes em paralelo.
 
+**Web — o que funciona e o que não (testado ao vivo):**
+- **WebSearch NÃO funciona** no seu ambiente: a ferramenta aparece na lista mas retorna resultados VAZIOS (o backend de busca é da Anthropic e não atende sessões via gateway). Não insista nela.
+- **WebFetch FUNCIONA**: buscar URL direta e resumir. Para "pesquisar", vá direto a URLs prováveis (docs oficiais, Google Finance, `https://www.google.com/search?q=...` via WebFetch) ou use **Playwright** (navegador real) e **Context7** (docs de bibliotecas).
+- **Subagentes (Agent tool) funcionam**, e as requisições deles passam pelo MESMO rate limiter (fila global de ~2 em voo) — não afogam a NVIDIA, mas enfileiram tudo; use com parcimônia.
+
 ## Economia de requisições LLM (free tier)
 
 Cada turno seu que gera resposta é uma requisição LLM; ferramentas nativas (Read/Write/Edit/Grep/Bash) e MCPs **não** contam — só invocações do modelo. Menos turnos = menos 429 no free tier, sem mudar o resultado entregue:
