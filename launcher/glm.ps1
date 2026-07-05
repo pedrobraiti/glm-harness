@@ -108,6 +108,12 @@ $env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1"
 $env:MAX_THINKING_TOKENS = "0"
 $env:CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"
 
+# Janela de contexto de 1M: o Claude Code assume 200k para modelo que ele nao
+# conhece e auto-compactaria cedo demais. Estes dois andam juntos: o
+# auto-compact passa a mirar 1M e o statusline mede a barra contra o mesmo 1M.
+$env:CLAUDE_CODE_AUTO_COMPACT_WINDOW = "1000000"
+$env:GLM_CONTEXT_WINDOW = "1000000"
+
 # Binario com branding GLM (roxo + "GLM Harness"), gerado por
 # apply-glm-branding.mjs a partir da copia vendorada. Se nao existir
 # (ex.: clone novo sem `npm install --prefix vendor` + patch), cai no

@@ -18,19 +18,27 @@ async function readStdin() {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+// Janela real do GLM 5.2 (o Claude Code assume 200k para modelo desconhecido,
+// então calculamos a porcentagem por conta própria a partir dos tokens usados).
+const WINDOW_SIZE = Number(process.env.GLM_CONTEXT_WINDOW || 1000000);
+
+function formatTokens(tokens) {
+  if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1).replace('.0', '')}M`;
+  return `${Math.round(tokens / 1000)}k`;
+}
+
 function contextSegment(data) {
   const ctx = data.context_window || {};
-  const pct = Math.min(100, Math.max(0, Math.round(ctx.used_percentage ?? 0)));
-  const size = ctx.context_window_size || 200000;
-  const used = ctx.total_input_tokens ?? Math.round((pct / 100) * size);
+  const reportedSize = ctx.context_window_size || 200000;
+  const used = ctx.total_input_tokens
+    ?? Math.round(((ctx.used_percentage ?? 0) / 100) * reportedSize);
+  const pct = Math.min(100, Math.max(0, Math.round((used / WINDOW_SIZE) * 100)));
 
   const filled = Math.round(pct / 10);
   const bar = '▓'.repeat(filled) + '░'.repeat(10 - filled);
   const barColor = pct >= 90 ? RED : pct >= 70 ? YELLOW : LILAC;
 
-  const usedK = Math.round(used / 1000);
-  const sizeK = Math.round(size / 1000);
-  return `${barColor}${bar}${RESET} ${pct}% ${DIM}(${usedK}k/${sizeK}k)${RESET}`;
+  return `${barColor}${bar}${RESET} ${pct}% ${DIM}(${formatTokens(used)}/${formatTokens(WINDOW_SIZE)})${RESET}`;
 }
 
 async function limiterSegment() {
