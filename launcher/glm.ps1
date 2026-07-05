@@ -65,4 +65,13 @@ $env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1"
 $env:MAX_THINKING_TOKENS = "0"
 $env:CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"
 
-claude @args
+# Binario com branding GLM (roxo + "GLM Harness"), gerado por
+# apply-glm-branding.mjs a partir da copia vendorada. Se nao existir
+# (ex.: clone novo sem `npm install --prefix vendor` + patch), cai no
+# claude global — funciona igual, so sem o visual.
+$GlmExe = Join-Path (Split-Path $PSScriptRoot -Parent) "vendor\glm-claude.exe"
+if (Test-Path $GlmExe) {
+    & $GlmExe @args
+} else {
+    claude @args
+}

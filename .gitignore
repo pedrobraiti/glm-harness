@@ -10,3 +10,6 @@ node_modules/
 glm-home/*
 !glm-home/CLAUDE.md
 !glm-home/settings.json
+
+# Binários vendorados do Claude Code (231MB) — reconstruíveis com npm install --prefix vendor + patch
+vendor/
