@@ -38,8 +38,31 @@ if (-not (Test-RouterUp)) {
 $env:ANTHROPIC_BASE_URL = $RouterUrl
 $env:ANTHROPIC_AUTH_TOKEN = "glm-local"
 
+# Identidade verdadeira: sem isso o system prompt do Claude Code diria ao GLM
+# que ele e um modelo Claude (e ele acreditaria). O router roteia qualquer
+# nome pro provider nvidia, mas o nome certo mantem o modelo ciente de si.
+$env:ANTHROPIC_MODEL = "z-ai/glm-5.2"
+$env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "z-ai/glm-5.2"
+
+# Home proprio do glm: config, historico e memoria global (CLAUDE.md de
+# identidade) separados do ~/.claude da Claude/Max.
+$GlmHome = (Resolve-Path "$PSScriptRoot\..\glm-home").Path
+$env:CLAUDE_CONFIG_DIR = $GlmHome
+
+# Primeiro uso: pula o wizard de onboarding no home novo.
+$StateFile = Join-Path $GlmHome ".claude.json"
+if (-not (Test-Path $StateFile)) {
+    '{ "hasCompletedOnboarding": true, "theme": "dark" }' | Set-Content -Path $StateFile -Encoding Ascii
+}
+
 # Menos requisicoes laterais -> menos chance de esbarrar no limite de
 # concorrencia (~2 em voo) do free tier da NVIDIA.
 $env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1"
+
+# NVIDIA rejeita o parametro `reasoning` que o router gera a partir do
+# `thinking` do Claude Code (400). O GLM 5.2 ja pensa em "max" por default,
+# entao desligar o thinking do lado do cliente nao perde qualidade.
+$env:MAX_THINKING_TOKENS = "0"
+$env:CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"
 
 claude @args

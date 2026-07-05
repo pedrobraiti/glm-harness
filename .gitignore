@@ -5,3 +5,8 @@ __pycache__/
 node_modules/
 .DS_Store
 .claude/.last-stop-signature
+
+# Home do glm: só a identidade e settings são versionados; o resto é estado de runtime
+glm-home/*
+!glm-home/CLAUDE.md
+!glm-home/settings.json
