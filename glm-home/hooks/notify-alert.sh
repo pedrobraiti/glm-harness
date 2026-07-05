@@ -19,7 +19,7 @@ printf '\a' >&2
 powershell.exe -NoProfile -Command "[console]::beep(880,250); [console]::beep(660,300)" >/dev/null 2>&1 &
 
 # Timestamped log so a stall is greppable after the fact (e.g. "did it sit on a permission prompt?").
-log="C:/Users/ACS Gamer/Documents/vscode-local/CC_Kernel/glm-home/hooks/notifications.log"
+log="C:/Users/ACS Gamer/Documents/vscode-local/glm-harness/glm-home/hooks/notifications.log"
 printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$message" >> "$log" 2>/dev/null
 
 exit 0

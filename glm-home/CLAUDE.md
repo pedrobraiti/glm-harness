@@ -8,19 +8,19 @@ Se o usuário pedir para mudar qualquer coisa do SEU funcionamento, estes são o
 
 | O quê | Onde |
 |---|---|
-| Projeto-casa (docs, launcher, este home) | `C:\Users\ACS Gamer\Documents\vscode-local\CC_Kernel\` (repo GitHub privado: `pedrobraiti/glm-harness`) |
-| Launcher (env vars, endpoint, modelo, este home) | `CC_Kernel\launcher\glm.ps1` |
+| Projeto-casa (docs, launcher, este home) | `C:\Users\ACS Gamer\Documents\vscode-local\glm-harness\` (repo GitHub privado: `pedrobraiti/glm-harness`) |
+| Launcher (env vars, endpoint, modelo, este home) | `glm-harness\launcher\glm.ps1` |
 | Comando `glm` no PowerShell | função no `$PROFILE` (`C:\Users\ACS Gamer\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`) |
 | Comando `glm` em qualquer shell | `C:\Users\ACS Gamer\AppData\Roaming\npm\glm.cmd` |
 | Router (tradução Anthropic↔OpenAI, provider, chave NVIDIA) | `C:\Users\ACS Gamer\.claude-code-router\config.json` — após editar: `ccr restart` |
-| Rate limiter (fila, pausa/retomada automática em 429) | código: `CC_Kernel\launcher\rate-limiter.mjs` (porta 3457); config **hot-reload**: `CC_Kernel\limiter-config.json`; estado vivo: `http://127.0.0.1:3457/glm-limiter/health`; logs: `CC_Kernel\logs\limiter.log`. Ajuste rápido: comando `/requisitions` |
-| Este home (config/estado/memória global SEUS, separado do da Claude) | `CC_Kernel\glm-home\` (via `CLAUDE_CONFIG_DIR`) |
-| Chave da NVIDIA (espelho para rebuild) | `CC_Kernel\.env` (git-ignored) |
-| Seu binário (Claude Code patchado: roxo + "GLM Harness") | `CC_Kernel\vendor\glm-claude.exe` — gerado por `CC_Kernel\launcher\apply-glm-branding.mjs` (rode `node apply-glm-branding.mjs` após `npm install --prefix vendor @anthropic-ai/claude-code@2.1.200`) |
-| **Suas skills** | `CC_Kernel\glm-home\skills\` (uma pasta por skill, com `SKILL.md`) |
-| Seus comandos slash | `CC_Kernel\glm-home\commands\` (ex.: `/requisitions`, `/setup`) |
-| Seus subagentes | `CC_Kernel\glm-home\agents\` |
-| **Sua memória global** | `CC_Kernel\glm-home\memory\` (índice em `MEMORY.md`, importado em toda sessão) |
+| Rate limiter (fila, pausa/retomada automática em 429) | código: `glm-harness\launcher\rate-limiter.mjs` (porta 3457); config **hot-reload**: `glm-harness\limiter-config.json`; estado vivo: `http://127.0.0.1:3457/glm-limiter/health`; logs: `glm-harness\logs\limiter.log`. Ajuste rápido: comando `/requisitions` |
+| Este home (config/estado/memória global SEUS, separado do da Claude) | `glm-harness\glm-home\` (via `CLAUDE_CONFIG_DIR`) |
+| Chave da NVIDIA (espelho para rebuild) | `glm-harness\.env` (git-ignored) |
+| Seu binário (Claude Code patchado: roxo + "GLM Harness") | `glm-harness\vendor\glm-claude.exe` — gerado por `glm-harness\launcher\apply-glm-branding.mjs` (rode `node apply-glm-branding.mjs` após `npm install --prefix vendor @anthropic-ai/claude-code@2.1.200`) |
+| **Suas skills** | `glm-harness\glm-home\skills\` (uma pasta por skill, com `SKILL.md`) |
+| Seus comandos slash | `glm-harness\glm-home\commands\` (ex.: `/requisitions`, `/setup`) |
+| Seus subagentes | `glm-harness\glm-home\agents\` |
+| **Sua memória global** | `glm-harness\glm-home\memory\` (índice em `MEMORY.md`, importado em toda sessão) |
 | Sessões/conversas (compartilhadas com a Claude) | `glm-home\projects\` é um **junction** para `~\.claude\projects\` — o `/resume` lista as mesmas conversas nos dois harnesses |
 
 ## Sessões compartilhadas com a Claude
@@ -78,7 +78,7 @@ Cada turno seu que gera resposta é uma requisição LLM; ferramentas nativas (R
 
 ## Sua memória global persistente
 
-Você (GLM 5.2) tem uma memória persistente baseada em arquivos em `C:\Users\ACS Gamer\Documents\vscode-local\CC_Kernel\glm-home\memory\`. O índice dela é carregado em toda sessão logo abaixo (import):
+Você (GLM 5.2) tem uma memória persistente baseada em arquivos em `C:\Users\ACS Gamer\Documents\vscode-local\glm-harness\glm-home\memory\`. O índice dela é carregado em toda sessão logo abaixo (import):
 
 @memory/MEMORY.md
 
@@ -114,4 +114,4 @@ Regras:
 
 - **Free tier da NVIDIA: ~2 requisições simultâneas em voo; o bloqueio 429 se ESTENDE a cada novo contato.** Evite paralelismo agressivo (vários subagentes/ferramentas de rede ao mesmo tempo). Se tomar 429, aguarde em silêncio antes de tentar de novo.
 - Seu thinking está desligado do lado do cliente (`MAX_THINKING_TOKENS=0`) porque a NVIDIA rejeita o parâmetro `reasoning`; você já raciocina em `max` por default no servidor — nada a "ligar".
-- Documentação completa do projeto: `CC_Kernel\01-BRIEFING.md`, `02-ARCHITECTURE-AND-PLAN.md`, `03-FINDINGS.md`.
+- Documentação completa do projeto: `glm-harness\01-BRIEFING.md`, `02-ARCHITECTURE-AND-PLAN.md`, `03-FINDINGS.md`.

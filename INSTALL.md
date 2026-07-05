@@ -33,7 +33,7 @@ Copy-Item .env.example .env
 
 ## Passo 3 — Adaptar caminhos absolutos (IMPORTANTE)
 
-O repo foi criado em `C:\Users\ACS Gamer\Documents\vscode-local\CC_Kernel`. Faça um **search & replace** desse caminho pelo caminho real do clone nesta máquina, nos arquivos:
+O repo foi criado em `C:\Users\ACS Gamer\Documents\vscode-local\glm-harness`. Faça um **search & replace** desse caminho pelo caminho real do clone nesta máquina, nos arquivos:
 
 - `glm-home\CLAUDE.md` (tabela de autoconfiguração do GLM)
 - `glm-home\settings.json` (comandos dos hooks)

@@ -63,8 +63,8 @@ $env:ANTHROPIC_DEFAULT_HAIKU_MODEL  = "<glm-model-id>"   # não esquecer!
 claude @args
 ```
 
-- **Exposição no PATH:** um `glm.cmd`/função no `$PROFILE` do PowerShell, ou um `glm.cmd` numa pasta que esteja no PATH, apontando pro script em `CC_Kernel`. O **projeto mora em `CC_Kernel`**; só o shim precisa estar acessível.
-- **Segredos:** token/keys em `CC_Kernel\.env` (git-ignored), espelhado em `.env.example`. O launcher lê do `.env`.
+- **Exposição no PATH:** um `glm.cmd`/função no `$PROFILE` do PowerShell, ou um `glm.cmd` numa pasta que esteja no PATH, apontando pro script em `glm-harness`. O **projeto mora em `glm-harness`**; só o shim precisa estar acessível.
+- **Segredos:** token/keys em `glm-harness\.env` (git-ignored), espelhado em `.env.example`. O launcher lê do `.env`.
 - **Isolamento garantido:** como as vars são setadas no processo do `glm`, o `claude` normal nunca as vê.
 
 ## 4. Gotchas / riscos (resumo)
@@ -78,7 +78,7 @@ claude @args
 ## 5. Plano de implementação (quando o usuário mandar)
 
 1. Escolher **Caminho A ou B** (decisão aberta abaixo).
-2. Criar estrutura em `CC_Kernel`: `.env`/`.env.example`, pasta `.claude/` de memória (handoff/context/todo/decisions como padrão do usuário), `README` executável.
+2. Criar estrutura em `glm-harness`: `.env`/`.env.example`, pasta `.claude/` de memória (handoff/context/todo/decisions como padrão do usuário), `README` executável.
 3. **A:** obter/config a key da z.ai; confirmar URL base + model id na doc oficial. **B:** subir e configurar o router (claude-code-router/LiteLLM) apontando pro endpoint OpenAI-compatível.
 4. Escrever o launcher (`glm.ps1` + shim no PATH), com env-scoping e mapeamento dos dois modelos.
 5. **Smoke test:** rodar `glm`, confirmar que responde com GLM; abrir `claude` em paralelo e confirmar que continua no Max (checar via `/status` ou billing).
@@ -89,4 +89,4 @@ claude @args
 - [ ] **Caminho A (z.ai pago) ou B (grátis/OpenRouter + proxy)?**
 - [ ] Se A: já tem conta/plano na z.ai, ou precisa criar? Confirmar URL base + model id oficiais.
 - [ ] Nome/forma do comando: `glm` puro? Aceitar flags repassadas pro `claude` (`glm @args`)?
-- [ ] Versionar `CC_Kernel` no git / criar repo? (o antigo será deletado — ver `01-BRIEFING §6`)
+- [ ] Versionar `glm-harness` no git / criar repo? (o antigo será deletado — ver `01-BRIEFING §6`)

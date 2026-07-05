@@ -14,13 +14,13 @@ Antes deste projeto, construímos o **`OS-CC-MCP`** (pasta irmã `..\OS-CC-MCP`,
 - **Funcionou de verdade** (testado ponta-a-ponta: o GLM 5.2 real criou arquivos, rodou testes, se corrigiu; 40 testes unitários; MCP registrado e validado pelo protocolo stdio real).
 - **Mas a UX não agradou.** O usuário não gostou da ideia de "os chats da Claude usarem o GLM por baixo como ferramenta". Queria outra coisa: **a experiência do Claude Code inteira rodando GLM**, como um app separado.
 
-Decisão: **abandonar a abordagem MCP** e começar o `CC_Kernel` do zero. O registro do MCP e o subagente global já foram removidos do ambiente. O repo/pasta antigos podem ser deletados (ver §6).
+Decisão: **abandonar a abordagem MCP** e começar o `glm-harness` do zero. O registro do MCP e o subagente global já foram removidos do ambiente. O repo/pasta antigos podem ser deletados (ver §6).
 
 ## 3. O que o usuário quer agora (a visão)
 
 - Um comando **`glm`** no terminal → abre o **Claude Code** rodando o **GLM 5.2** como o cérebro da sessão.
 - O comando **`claude`** normal → continua Claude na assinatura **Max**, sem ser afetado.
-- Projeto novo, do zero, com **home próprio** nesta pasta `CC_Kernel`.
+- Projeto novo, do zero, com **home próprio** nesta pasta `glm-harness`.
 
 ## 4. O insight-chave que destrava isso (e por que NÃO perde o Max)
 

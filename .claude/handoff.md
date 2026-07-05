@@ -4,7 +4,10 @@
 > de forma relativamente detalhada. É o PRIMEIRO arquivo que a próxima sessão lê.
 > Mantenha-o vivo e específico — detalhado o bastante para retomar sem reconstruir o raciocínio.
 
-**Última atualização:** 2026-07-05 (núcleo + branding + rate limiter entregues)
+**Última atualização:** 2026-07-05 (renomeação da pasta para glm-harness preparada)
+
+## RENOMEAÇÃO DA PASTA (estado mais fresco)
+O usuário decidiu renomear a pasta do projeto de `CC_Kernel` para **`glm-harness`** (`C:\Users\ACS Gamer\Documents\vscode-local\glm-harness`). TODAS as referências já foram atualizadas para o caminho novo ($PROFILE, glm.cmd no npm dir, glm-home/settings.json, hooks, CLAUDE.md do glm-home, docs, memória global da Claude — inclusive o slug `~\.claude\projects\C--...-glm-harness` já existe como cópia do antigo). O usuário faria o rename físico da pasta logo após fechar a sessão. Se você (sessão nova) está lendo isto de dentro de `glm-harness\`, o rename aconteceu e está tudo consistente; se ainda está em `CC_Kernel\`, o rename ainda não foi feito — nada funciona do `glm` até renomear (as referências apontam pro nome novo). Processos limiter/ccr foram parados para não travar o rename.
 
 ## Onde parei
 **Projeto entregue e funcional, agora com rate limiter.** Cadeia: `glm` → `glm.ps1` → `vendor/glm-claude.exe` (patchado roxo/"GLM Harness") → **`launcher/rate-limiter.mjs` (porta 3457: fila com concorrência limitada; em 429 pausa TODO o tráfego em silêncio e retoma sozinho)** → claude-code-router (3456) → NVIDIA. Config do limiter em `limiter-config.json` (hot-reload); comando `/requisitions` no glm-home mostra/ajusta. Smoke test passou pela cadeia completa; health em `http://127.0.0.1:3457/glm-limiter/health`. Falta: validação visual interativa pelo usuário e ver o limiter sob rajadas reais (o caminho de 429 ainda não foi exercitado ao vivo — só o caminho feliz).
@@ -53,6 +56,6 @@ O glm-home agora replica o ambiente completo do usuário: `rules\` (ESSENTIALS +
 - PS 5.1: corpo com acentos quebra Content-Length no Invoke-RestMethod (testes manuais em ASCII).
 
 ## Como retomar rápido
-- Smoke: `& "C:\Users\ACS Gamer\Documents\vscode-local\CC_Kernel\launcher\glm.ps1" -p "which model are you?"`
+- Smoke: `& "C:\Users\ACS Gamer\Documents\vscode-local\glm-harness\launcher\glm.ps1" -p "which model are you?"`
 - Serviço: `ccr status` / `ccr restart`; config do router: `~/.claude-code-router/config.json`.
 - Arquivos-chave: `launcher/glm.ps1`, `launcher/apply-glm-branding.mjs`, `glm-home/CLAUDE.md`, README.

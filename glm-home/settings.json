@@ -3,7 +3,7 @@
   "includeCoAuthoredBy": false,
   "statusLine": {
     "type": "command",
-    "command": "node \"C:/Users/ACS Gamer/Documents/vscode-local/CC_Kernel/launcher/glm-statusline.mjs\"",
+    "command": "node \"C:/Users/ACS Gamer/Documents/vscode-local/glm-harness/launcher/glm-statusline.mjs\"",
     "padding": 0
   },
   "env": {
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"C:/Users/ACS Gamer/Documents/vscode-local/CC_Kernel/glm-home/hooks/stop-memory-check.sh\"",
+            "command": "bash \"C:/Users/ACS Gamer/Documents/vscode-local/glm-harness/glm-home/hooks/stop-memory-check.sh\"",
             "timeout": 30
           }
         ]
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"C:/Users/ACS Gamer/Documents/vscode-local/CC_Kernel/glm-home/hooks/notify-alert.sh\"",
+            "command": "bash \"C:/Users/ACS Gamer/Documents/vscode-local/glm-harness/glm-home/hooks/notify-alert.sh\"",
             "timeout": 10
           }
         ]

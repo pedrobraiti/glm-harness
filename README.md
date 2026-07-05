@@ -1,4 +1,4 @@
-# GLM Harness (CC_Harness)
+# GLM Harness
 
 Comando de terminal **`glm`** que abre a experiência completa do Claude Code rodando o **GLM 5.2** como cérebro da sessão — com visual próprio (roxo, "GLM Harness") — enquanto o comando `claude` normal continua na assinatura **Max**, intacto. Dois comandos, dois cérebros, sem conflito.
 

@@ -4,7 +4,7 @@
 > O detalhe volátil de "de onde parei" fica no `handoff.md`; as tarefas, no `todo.md`;
 > as decisões com o porquê, no `decisions.md`.
 
-**Nome:** CC_Kernel (repo GitHub: `glm-harness`)
+**Nome:** glm-harness (repo GitHub: `glm-harness`)
 **Descrição:** Comando de terminal `glm` que abre o Claude Code inteiro rodando o GLM 5.2 como cérebro da sessão, sem afetar o `claude` normal (assinatura Max).
 **Stack:** PowerShell (launcher) + claude-code-router (Node, proxy de tradução Anthropic↔OpenAI) + endpoint NVIDIA (`z-ai/glm-5.2`, free tier).
 

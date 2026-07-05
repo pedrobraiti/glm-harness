@@ -5,7 +5,7 @@ argument-hint: [maxConcurrent] [cooldownSeconds]
 
 O rate limiter do GLM Harness (proxy local na porta 3457) controla quantas requisições suas chegam simultaneamente ao endpoint da NVIDIA e o que acontece num 429. A config vive em:
 
-`C:\Users\ACS Gamer\Documents\vscode-local\CC_Kernel\limiter-config.json`
+`C:\Users\ACS Gamer\Documents\vscode-local\glm-harness\limiter-config.json`
 
 Campos:
 - `maxConcurrent` — requisições simultâneas em voo (free tier da NVIDIA aguenta ~2; use 1 se estiver tomando 429).
