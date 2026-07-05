@@ -1,4 +1,46 @@
 {
   "theme": "dark",
-  "includeCoAuthoredBy": false
+  "includeCoAuthoredBy": false,
+  "env": {
+    "DISABLE_ADAPTIVE_THINKING": "1"
+  },
+  "permissions": {
+    "allow": [
+      "mcp__scout",
+      "WebSearch",
+      "WebFetch"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"C:/Users/ACS Gamer/Documents/vscode-local/CC_Kernel/glm-home/hooks/stop-memory-check.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"C:/Users/ACS Gamer/Documents/vscode-local/CC_Kernel/glm-home/hooks/notify-alert.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "github@claude-plugins-official": true
+  },
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true
 }

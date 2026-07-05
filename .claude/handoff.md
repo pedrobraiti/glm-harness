@@ -20,6 +20,12 @@ Usuário abre `glm` num terminal novo e confirma o visual roxo/"GLM Harness" e o
 ## Skills do GLM (adicionado por último)
 O glm-home agora tem `skills\` (find-skills, frontend-design, vizier — cópias independentes das do ~/.claude, vizier sem .venv/.git), `commands\` (requisitions, setup) e `agents\` (vizier-research-envoy). O CLAUDE.md de identidade tem seção "Suas skills são SUAS" ensinando que editar/criar skills é em `glm-home\skills\`. Validado em sessão real: o GLM lista as 3 skills e sabe o fluxo de edição. Nota: vizier no glm é referência/edição, não operacional (MCPs scout/valet não registrados no home dele).
 
+## Paridade de experiência com a Claude (adicionado por último)
+O glm-home agora replica o ambiente completo do usuário: `rules\` (ESSENTIALS + BEST_PRACTICES importadas no CLAUDE.md), `hooks\` (stop-memory-check.sh idêntico; notify-alert.sh com branding GLM e log próprio; registrados no settings.json com paths absolutos do glm-home), `plugins\` (cópia de ~/.claude/plugins; github + rust-analyzer-lsp habilitados), MCPs no `.claude.json` do home (serena, context7, playwright, scout). **Decisão de segurança: ibkr/crypto (execução real de trading) NÃO foram registrados** — só o scout (dados). Settings espelhado SEM o statusline `.vibe-ads` e o spinnerVerbs de propaganda (parecem adware no settings global do usuário — flagado a ele). Validado: `glm mcp list` mostra 5 conectados; sessão real confirma identidade/MCPs/memória/commits.
+
+## Memória global do GLM (adicionado por último)
+`glm-home\memory\` com índice `MEMORY.md` **importado em toda sessão** via `@memory/MEMORY.md` no CLAUDE.md de identidade (replica o comportamento da memória do Claude Code, brandado GLM 5.2, sem menção a Claude Code). Regras completas na seção "Sua memória global persistente" do CLAUDE.md: um fato por arquivo, frontmatter (name/description/metadata.type user|feedback|project|reference), atualizar índice, dedup, salvar por iniciativa própria. Semeada com `quem-e-o-usuario.md`. Validado ao vivo: pedi pra gravar um fato e o GLM criou o arquivo no formato certo, atualizou o índice e respondeu em PT-BR (efeito da memória semeada).
+
 ## Em aberto / armadilhas
 - **Trust dialog:** o glm-home é novo — na primeira sessão interativa em cada pasta o harness vai perguntar "do you trust this folder?" de novo (estado por-home). Normal.
 - Free tier NVIDIA: ~2 requisições em voo; 429 estende a cada contato. Sessões interativas disparam rajadas; se sufocar, Caminho A (z.ai pago) é só trocar provider na config do ccr.

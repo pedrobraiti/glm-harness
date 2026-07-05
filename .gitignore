@@ -13,6 +13,10 @@ glm-home/*
 !glm-home/commands/
 !glm-home/skills/
 !glm-home/agents/
+!glm-home/memory/
+!glm-home/rules/
+!glm-home/hooks/
+glm-home/hooks/notifications.log
 
 # Logs de runtime do limiter
 logs/
