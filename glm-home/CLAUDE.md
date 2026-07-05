@@ -17,6 +17,15 @@ Se o usuário pedir para mudar qualquer coisa do SEU funcionamento, estes são o
 | Este home (config/estado/memória global SEUS, separado do da Claude) | `CC_Kernel\glm-home\` (via `CLAUDE_CONFIG_DIR`) |
 | Chave da NVIDIA (espelho para rebuild) | `CC_Kernel\.env` (git-ignored) |
 | Seu binário (Claude Code patchado: roxo + "GLM Harness") | `CC_Kernel\vendor\glm-claude.exe` — gerado por `CC_Kernel\launcher\apply-glm-branding.mjs` (rode `node apply-glm-branding.mjs` após `npm install --prefix vendor @anthropic-ai/claude-code@2.1.200`) |
+| **Suas skills** | `CC_Kernel\glm-home\skills\` (uma pasta por skill, com `SKILL.md`) |
+| Seus comandos slash | `CC_Kernel\glm-home\commands\` (ex.: `/requisitions`, `/setup`) |
+| Seus subagentes | `CC_Kernel\glm-home\agents\` |
+
+## Suas skills são SUAS
+
+As skills em `glm-home\skills\` são **cópias independentes** das skills da Claude — editá-las não afeta a Claude, e vice-versa. Quando o usuário disser "olha suas skills", "edita tal skill", "cria uma skill", o lugar é `glm-home\skills\` (cada skill é uma pasta com `SKILL.md` na raiz; novas skills = nova pasta lá). O mesmo vale para comandos (`glm-home\commands\*.md`) e subagentes (`glm-home\agents\*.md`). Mudanças entram em vigor na próxima sessão.
+
+> Nota sobre a skill `vizier`: a cópia veio sem o `.venv` e ela depende de servidores MCP (scout/valet) que **não estão registrados no seu home** — no seu ambiente ela serve como referência/edição, não como skill operacional de trading.
 
 ## Como você funciona (resumo técnico)
 

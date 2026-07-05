@@ -11,6 +11,8 @@ glm-home/*
 !glm-home/CLAUDE.md
 !glm-home/settings.json
 !glm-home/commands/
+!glm-home/skills/
+!glm-home/agents/
 
 # Logs de runtime do limiter
 logs/

@@ -15,7 +15,10 @@ Cadeia completa: `glm` (função no $PROFILE / glm.cmd no npm dir) → `launcher
 Decisões/aprendizados importantes: (1) o pacote npm ≥2.1.x é só wrapper de binário nativo — o patch é binário, não em cli.js; (2) sem ANTHROPIC_MODEL o GLM se apresentava como "Claude Fable 5" (obedecia ao system prompt); (3) roteamento provado por falsificação (porta morta → ConnectionRefused), pois o log do ccr fica vazio; (4) 400 `reasoning` da NVIDIA resolvido desligando thinking no cliente (GLM já pensa em max no servidor).
 
 ## Próximo passo concreto
-Duas pendências de limpeza: (1) o usuário precisa rodar `gh auth refresh -h github.com -s delete_repo` (interativo) e depois `gh repo delete pedrobraiti/OpenSource-LLM-on-ClaudeCode --yes` — o token atual não tem o escopo; (2) a raiz vazia `..\OS-CC-MCP` está presa por um handle de outro processo (conteúdo já foi apagado) — remover quando liberar. Depois: usuário abre `glm` num terminal novo e confirma o visual roxo/"GLM Harness" e o comportamento do limiter em uso real.
+Usuário abre `glm` num terminal novo e confirma o visual roxo/"GLM Harness" e o comportamento do limiter em uso real. (Repo antigo já deletado pelo usuário; resta só a raiz vazia `..\OS-CC-MCP` presa por handle — some quando o processo que a segura fechar.)
+
+## Skills do GLM (adicionado por último)
+O glm-home agora tem `skills\` (find-skills, frontend-design, vizier — cópias independentes das do ~/.claude, vizier sem .venv/.git), `commands\` (requisitions, setup) e `agents\` (vizier-research-envoy). O CLAUDE.md de identidade tem seção "Suas skills são SUAS" ensinando que editar/criar skills é em `glm-home\skills\`. Validado em sessão real: o GLM lista as 3 skills e sabe o fluxo de edição. Nota: vizier no glm é referência/edição, não operacional (MCPs scout/valet não registrados no home dele).
 
 ## Em aberto / armadilhas
 - **Trust dialog:** o glm-home é novo — na primeira sessão interativa em cada pasta o harness vai perguntar "do you trust this folder?" de novo (estado por-home). Normal.

@@ -26,3 +26,5 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 - [x] README reescrito com uso real, arquitetura e rebuild
 - [x] Rate limiter (`launcher/rate-limiter.mjs`, porta 3457): fila com concorrência limitada, pausa total em 429 e retomada automática; config hot-reload em `limiter-config.json`; comando `/requisitions` no glm-home; launcher integra e sobe sozinho
 - [x] Apagar conteúdo da pasta antiga `..\OS-CC-MCP` (raiz vazia ficou presa por handle de outro processo)
+- [x] Repo antigo `OpenSource-LLM-on-ClaudeCode` deletado pelo usuário (após refresh do escopo delete_repo)
+- [x] Skills próprias do GLM: cópias de find-skills/frontend-design/vizier + comando /setup + agente vizier-research-envoy em `glm-home\` (skills/commands/agents); CLAUDE.md de identidade ensina onde vivem e como editar; validado em sessão real
