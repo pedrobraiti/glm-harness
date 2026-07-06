@@ -132,17 +132,27 @@ Write-Host "[glm] Chave gravada no .env" -ForegroundColor DarkGray
 
 if (-not (Test-Path $CcrConfigDir)) { New-Item -ItemType Directory -Path $CcrConfigDir | Out-Null }
 $wroteConfig = $false
+$configUnchanged = $false
 if (Test-Path $CcrConfigFile) {
     try {
         $cfg = Get-Content $CcrConfigFile -Raw | ConvertFrom-Json
         $updated = $false
         foreach ($provider in $cfg.Providers) {
             if ($provider.name -eq "nvidia") {
-                $provider.api_key = $Key
+                if ($provider.api_key -eq $Key) {
+                    # Mesma chave: nao reescreve nem reinicia o router (um
+                    # restart derruba requisicoes em voo de OUTRAS sessoes glm).
+                    $configUnchanged = $true
+                } else {
+                    $provider.api_key = $Key
+                }
                 $updated = $true
             }
         }
-        if ($updated) {
+        if ($configUnchanged) {
+            Write-Host "[glm] Config do router ja tem essa chave - nada a mudar." -ForegroundColor DarkGray
+            $wroteConfig = $true
+        } elseif ($updated) {
             [System.IO.File]::WriteAllText($CcrConfigFile, ($cfg | ConvertTo-Json -Depth 10), $Utf8NoBom)
             Write-Host "[glm] Config do router atualizada (api_key do provider nvidia)." -ForegroundColor DarkGray
             $wroteConfig = $true
@@ -168,8 +178,9 @@ try {
 } catch {
     if ($_.Exception.Response) { $routerUp = $true }
 }
-if ($routerUp) {
+if ($routerUp -and -not $configUnchanged) {
     Write-Host "[glm] Reiniciando o router para aplicar a chave..." -ForegroundColor DarkGray
+    Write-Host "[glm] (atencao: outras sessoes glm abertas verao a resposta atual falhar e retentar)" -ForegroundColor DarkGray
     Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "ccr", "restart" -WindowStyle Hidden -Wait
 }
 

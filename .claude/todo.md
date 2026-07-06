@@ -45,4 +45,5 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 - [x] Repo tornado PÚBLICO após conferência final (histórico limpo, remoto só com master pós-expurgo, templates com placeholder)
 - [x] LICENSE MIT na raiz
 - [x] settings.local.json (git-ignored) para overrides pessoais via --settings no launcher; settings.json versionado sem bypassPermissions; validado ao vivo
+- [x] Limiter v3: corrigido deadlock por slot vazado (pipe→pipeline com callback garantido; abort do upstream quando cliente desiste; timeout de 15min de segurança); /login não reinicia mais o ccr se a chave não mudou
 - [x] Wizard de login no primeiro uso (launcher/glm-login.ps1): abre página da chave NVIDIA no navegador, valida a chave ao vivo no endpoint, grava .env + config do router (atualiza em lugar se existir), reinicia ccr; pergunta de tema no primeiro run (grava no settings.local.json); comando /login no glm-home refaz o fluxo; INSTALL/README simplificados; caminhos feliz e de chave inválida testados

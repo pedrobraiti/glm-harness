@@ -14,6 +14,7 @@
 // Uso: node rate-limiter.mjs   (o glm.ps1 sobe isso sozinho)
 
 import http from 'node:http';
+import { pipeline } from 'node:stream';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,7 +73,11 @@ async function waitCooldown() {
   }
 }
 
-function forward(req, body) {
+// Folga sobre os 10min de API_TIMEOUT_MS do router: socket mudo além disso é
+// upstream pendurado — derruba para nunca segurar um slot para sempre.
+const UPSTREAM_SILENCE_TIMEOUT_MS = 900_000;
+
+function forward(req, body, onRequest) {
   return new Promise((resolve, reject) => {
     const upstreamReq = http.request(
       {
@@ -85,6 +90,10 @@ function forward(req, body) {
       resolve,
     );
     upstreamReq.on('error', reject);
+    upstreamReq.setTimeout(UPSTREAM_SILENCE_TIMEOUT_MS, () =>
+      upstreamReq.destroy(new Error('upstream mudo por tempo demais')),
+    );
+    if (onRequest) onRequest(upstreamReq);
     upstreamReq.end(body);
   });
 }
@@ -111,9 +120,15 @@ const server = http.createServer(async (req, res) => {
 
   // Se o cliente desistir (Ctrl-C, processo morto), abortamos os retries:
   // requisição órfã re-contactando a NVIDIA só estende o bloqueio 429.
+  // Também derrubamos o voo ATUAL: um pipe para cliente morto estanca sem
+  // emitir end/close e o slot de concorrência vazaria para sempre (deadlock).
   let clientGone = false;
+  let activeUpstreamReq = null;
   res.on('close', () => {
-    if (!res.writableEnded) clientGone = true;
+    if (!res.writableEnded) {
+      clientGone = true;
+      if (activeUpstreamReq) activeUpstreamReq.destroy(new Error('cliente desistiu'));
+    }
   });
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -124,7 +139,7 @@ const server = http.createServer(async (req, res) => {
     }
     await acquireSlot();
     try {
-      const upstreamRes = await forward(req, body);
+      const upstreamRes = await forward(req, body, r => { activeUpstreamReq = r; });
       const status = upstreamRes.statusCode;
 
       if (status === 429 || status >= 500) {
@@ -149,13 +164,15 @@ const server = http.createServer(async (req, res) => {
       }
 
       res.writeHead(status, upstreamRes.headers);
-      upstreamRes.pipe(res);
-      await new Promise(resolve => {
-        upstreamRes.on('end', resolve);
-        upstreamRes.on('close', resolve);
-      });
+      // pipeline, não pipe manual: o callback dispara SEMPRE (fim ou erro em
+      // qualquer ponta), então o finally libera o slot mesmo com cliente morto.
+      await new Promise(resolve => pipeline(upstreamRes, res, () => resolve()));
       return;
     } catch (err) {
+      if (clientGone) {
+        log(`cliente desistiu com requisição em voo — abortada (tentativa ${attempt})`);
+        return;
+      }
       if (attempt >= maxAttempts) {
         res.writeHead(502, { 'content-type': 'application/json' });
         res.end(JSON.stringify({ error: { type: 'api_error', message: `glm-limiter: upstream inacessível: ${err.message}` } }));
