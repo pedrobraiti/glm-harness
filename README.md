@@ -57,6 +57,7 @@ Segredos: `.env` (git-ignored, espelhado em `.env.example`) guarda a `NVIDIA_API
 ## Limitações conhecidas
 
 - **Free tier da NVIDIA: ~2 requisições simultâneas em voo; o 429 se estende a cada novo contato** (medições em `03-FINDINGS.md`). Uso interativo pesado (subagentes paralelos, rajadas) pode sufocar. Se virar problema, o upgrade natural é o endpoint Anthropic-nativo pago da z.ai (Caminho A em `02-ARCHITECTURE-AND-PLAN.md`) — só trocar endpoint/chave no router.
+- **O que esperar do free tier na prática** (medido, não teoria): o 429 da NVIDIA vem **sem nenhum header** de limite (nem `retry-after`), o castigo **se estende a cada contato** durante o bloqueio, e além da concorrência existe cota de volume invisível. O padrão de uso pesado é: funciona um bom tempo → seca → o limiter pausa em silêncio (statusline mostra `⏸ 429 · retoma em Xs`) → volta sozinho. **Regra de ouro: quando demorar, não cancele nem reenvie** — cada toque durante o bloqueio o estende. Uso leve/moderado: você provavelmente nem nota. Motor principal o dia todo: considere o endpoint pago.
 - Rotear o Claude Code a modelo não-Claude é **oficialmente não-suportado** pela Anthropic → versão pinada (2.1.200); updates podem exigir re-patch (`apply-glm-branding.mjs` é reprodutível).
 - Thinking do lado do cliente desligado (NVIDIA rejeita `reasoning`); o GLM 5.2 já raciocina em `max` por default no servidor — nada se perde.
 
