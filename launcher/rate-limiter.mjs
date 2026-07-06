@@ -132,12 +132,21 @@ const server = http.createServer(async (req, res) => {
   });
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    await waitCooldown();
-    if (clientGone) {
-      log(`cliente desistiu — abortando retries da requisição (tentativa ${attempt})`);
-      return;
+    // Adquire o slot SO com o cooldown limpo. Sem a re-checagem, na virada do
+    // cooldown mais de uma requisição enfileirada escapava: a primeira tomava
+    // 429 e re-armava a janela, mas as seguintes já tinham passado da checagem
+    // e tocavam a NVIDIA também — estendendo o bloqueio à toa. Com isso, após
+    // um 429 sai exatamente UMA sonda por janela de silêncio.
+    for (;;) {
+      await waitCooldown();
+      if (clientGone) {
+        log(`cliente desistiu — abortando retries da requisição (tentativa ${attempt})`);
+        return;
+      }
+      await acquireSlot();
+      if (Date.now() >= cooldownUntil) break;
+      releaseSlot();
     }
-    await acquireSlot();
     try {
       const upstreamRes = await forward(req, body, r => { activeUpstreamReq = r; });
       const status = upstreamRes.statusCode;
