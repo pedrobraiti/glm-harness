@@ -68,7 +68,20 @@ async function contextSegment(data) {
   const barColor = pct >= 90 ? RED : pct >= 70 ? YELLOW : LILAC;
   const tilde = estimated ? '~' : '';
 
-  return `${barColor}${bar}${RESET} ${tilde}${pct}% ${DIM}(${tilde}${formatTokens(used)}/${formatTokens(WINDOW_SIZE)})${RESET}`;
+  return {
+    text: `${barColor}${bar}${RESET} ${tilde}${pct}% ${DIM}(${tilde}${formatTokens(used)}/${formatTokens(WINDOW_SIZE)})${RESET}`,
+    pct,
+  };
+}
+
+// Aviso de compactação MANUAL com antecedência: dá tempo de pedir pro GLM
+// salvar memória/handoff antes de rodar /compact. O auto-compact (180k)
+// segue como rede de segurança final — sem ele, o teto físico de 202.752
+// tokens do endpoint gratuito derruba a sessão com 400.
+function compactAdvice(pct) {
+  if (pct >= 90) return `${RED}‼ rode /compact AGORA (salve memória antes) — auto-compact iminente${RESET}`;
+  if (pct >= 80) return `${YELLOW}⚠ /compact recomendado — antes, peça pra salvar memória/handoff${RESET}`;
+  return null;
 }
 
 async function limiterSegment() {
@@ -110,10 +123,14 @@ const modelName = data.model?.id === 'z-ai/glm-5.2' || data.model?.display_name 
   ? 'GLM 5.2'
   : (data.model?.display_name || 'GLM');
 
+const context = await contextSegment(data);
 const parts = [
   `${PURPLE}◆ ${modelName}${RESET}`,
-  await contextSegment(data),
+  context.text,
 ];
+
+const advice = compactAdvice(context.pct);
+if (advice) parts.push(advice);
 
 const limiter = await limiterSegment();
 if (limiter) parts.push(limiter);
