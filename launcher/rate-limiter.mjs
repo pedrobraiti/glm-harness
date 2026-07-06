@@ -67,6 +67,12 @@ function releaseSlot() {
 // (contato durante o 429 estende o bloqueio da NVIDIA).
 let cooldownUntil = 0;
 
+// Escalada com MEMÓRIA GLOBAL: 429s consecutivos (de qualquer requisição)
+// alongam a espera. Sem isso, cada retry do cliente nascia como requisição
+// nova com escalada zerada -> sondas a cada 2-4min -> bloqueio profundo se
+// auto-sustentava para sempre. Só um sucesso real zera o contador.
+let consecutiveRateLimits = 0;
+
 async function waitCooldown() {
   while (Date.now() < cooldownUntil) {
     await sleep(Math.min(cooldownUntil - Date.now(), 1000));
@@ -155,15 +161,18 @@ const server = http.createServer(async (req, res) => {
         const errBody = await readAll(upstreamRes);
         const errText = errBody.toString('utf8');
         if (looksLikeRateLimit(status, errText) && attempt < maxAttempts) {
-          // Cooldown ESCALONANTE: o bloqueio da NVIDIA se estende a cada
-          // contato, então retentar sempre no mesmo intervalo curto pode
-          // perpetuá-lo. 1x, 2x, 3x, 4x (teto) o cooldownSeconds da config.
+          // Escala pelo contador GLOBAL de 429s seguidos (teto 20x = 30min
+          // com base 90s): bloqueio raso resolve rápido; bloqueio profundo
+          // ganha janelas de silêncio grandes o bastante para expirar.
           const { cooldownSeconds } = loadConfig();
-          const escalated = cooldownSeconds * Math.min(attempt, 4);
+          consecutiveRateLimits++;
+          const escalated = cooldownSeconds * Math.min(consecutiveRateLimits, 20);
           cooldownUntil = Math.max(cooldownUntil, Date.now() + escalated * 1000);
-          log(`429/rate-limit do upstream (tentativa ${attempt}/${maxAttempts}) -> silêncio total por ${escalated}s, retomo sozinho`);
+          log(`429/rate-limit do upstream (${consecutiveRateLimits} seguidos; tentativa ${attempt}/${maxAttempts}) -> silêncio total por ${escalated}s, retomo sozinho`);
           continue;
         }
+        // Upstream respondeu (ainda que com erro não-429): não está bloqueado.
+        consecutiveRateLimits = 0;
         const headers = { ...upstreamRes.headers };
         delete headers['content-length'];
         delete headers['transfer-encoding'];
@@ -172,6 +181,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      consecutiveRateLimits = 0;
       res.writeHead(status, upstreamRes.headers);
       // pipeline, não pipe manual: o callback dispara SEMPRE (fim ou erro em
       // qualquer ponta), então o finally libera o slot mesmo com cliente morto.
