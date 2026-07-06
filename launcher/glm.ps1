@@ -162,13 +162,53 @@ $env:CLAUDE_CODE_AUTO_COMPACT_WINDOW = "1000000"
 $env:GLM_CONTEXT_WINDOW = "1000000"
 
 # Overrides LOCAIS de settings (git-ignored): preferencias pessoais que nao
-# devem ir pro GitHub (ex.: permissions.defaultMode=bypassPermissions). Se o
-# arquivo existir, entra por cima do settings.json versionado via --settings.
+# devem ir pro GitHub (ex.: permissions.defaultMode=bypassPermissions). Entra
+# por cima de TODOS os outros settings via --settings (nivel CLI).
+#
+# Blindagem de identidade: o nivel CLI vence tambem settings de PROJETO.
+# Sem isso, abrir o glm numa pasta com .claude\settings.json proprio trocava
+# o visual — caso classico: na pasta HOME do usuario, o settings global do
+# Claude Code vira "settings de projeto" (tema light-ansi, statusline de
+# terceiros, model claude) e descaracterizava o GLM. Aqui garantimos que as
+# chaves de identidade sempre existam no arquivo local (so preenche o que
+# faltar; escolhas do dono ficam intactas).
 $LocalSettings = Join-Path $GlmHome "settings.local.json"
-$ExtraArgs = @()
-if (Test-Path $LocalSettings) {
-    $ExtraArgs = @("--settings", $LocalSettings)
+$SettingsUtf8 = New-Object System.Text.UTF8Encoding($false)
+if (-not (Test-Path $LocalSettings)) {
+    [System.IO.File]::WriteAllText($LocalSettings, '{ }', $SettingsUtf8)
 }
+try {
+    $glmSettings = Get-Content $LocalSettings -Raw | ConvertFrom-Json
+    $settingsChanged = $false
+    if (-not $glmSettings.PSObject.Properties['theme']) {
+        $glmSettings | Add-Member -NotePropertyName "theme" -NotePropertyValue "dark"
+        $settingsChanged = $true
+    }
+    if (-not $glmSettings.PSObject.Properties['model']) {
+        $glmSettings | Add-Member -NotePropertyName "model" -NotePropertyValue "z-ai/glm-5.2"
+        $settingsChanged = $true
+    }
+    if (-not $glmSettings.PSObject.Properties['statusLine']) {
+        $rootForward = $ProjectRoot -replace '\\', '/'
+        $statusLine = New-Object PSObject
+        $statusLine | Add-Member NoteProperty type "command"
+        $statusLine | Add-Member NoteProperty command "node `"$rootForward/launcher/glm-statusline.mjs`""
+        $statusLine | Add-Member NoteProperty padding 0
+        $glmSettings | Add-Member -NotePropertyName "statusLine" -NotePropertyValue $statusLine
+        $settingsChanged = $true
+    }
+    if (-not $glmSettings.PSObject.Properties['spinnerVerbs']) {
+        $spinnerVerbs = New-Object PSObject
+        $spinnerVerbs | Add-Member NoteProperty mode "replace"
+        $spinnerVerbs | Add-Member NoteProperty verbs @("Pensando", "Maquinando", "Conjurando", "Voando")
+        $glmSettings | Add-Member -NotePropertyName "spinnerVerbs" -NotePropertyValue $spinnerVerbs
+        $settingsChanged = $true
+    }
+    if ($settingsChanged) {
+        [System.IO.File]::WriteAllText($LocalSettings, ($glmSettings | ConvertTo-Json -Depth 10), $SettingsUtf8)
+    }
+} catch { }
+$ExtraArgs = @("--settings", $LocalSettings)
 
 # Binario com branding GLM (roxo + "GLM Harness"), gerado por
 # apply-glm-branding.mjs a partir da copia vendorada. Se nao existir
