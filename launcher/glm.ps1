@@ -22,6 +22,27 @@ function Test-HttpUp([string]$Url) {
 function Test-RouterUp { Test-HttpUp $RouterUrl }
 function Test-LimiterUp { Test-HttpUp "$LimiterUrl/glm-limiter/health" }
 
+$IsPrintMode = ($args -contains "-p") -or ($args -contains "--print")
+
+# "Login" do harness: sem chave NVIDIA no .env ou sem config do router, roda o
+# assistente (abre a pagina da chave no navegador, valida na NVIDIA e grava
+# .env + config). Com chave no .env e so a config faltando, ele resolve sozinho
+# sem perguntar nada.
+$EnvFile = Join-Path $ProjectRoot ".env"
+$CcrConfigFile = Join-Path $HOME ".claude-code-router\config.json"
+$HasNvidiaKey = $false
+if (Test-Path $EnvFile) {
+    $HasNvidiaKey = [bool](Get-Content $EnvFile | Where-Object { $_ -match '^\s*NVIDIA_API_KEY\s*=\s*nvapi-' })
+}
+if (-not $HasNvidiaKey -or -not (Test-Path $CcrConfigFile)) {
+    if (-not $HasNvidiaKey -and $IsPrintMode) {
+        Write-Host "[glm] Sem chave NVIDIA configurada. Rode 'glm' (sem -p) uma vez para fazer o login." -ForegroundColor Red
+        exit 1
+    }
+    & "$PSScriptRoot\glm-login.ps1"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
 if (-not (Test-RouterUp)) {
     Write-Host "[glm] Subindo o claude-code-router..." -ForegroundColor DarkGray
     Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "ccr", "start" -WindowStyle Hidden
@@ -76,10 +97,36 @@ $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "z-ai/glm-5.2"
 $GlmHome = (Resolve-Path "$PSScriptRoot\..\glm-home").Path
 $env:CLAUDE_CONFIG_DIR = $GlmHome
 
-# Primeiro uso: pula o wizard de onboarding no home novo.
+# Primeiro uso: pula o wizard de onboarding nativo (que ofereceria login
+# Anthropic — nao se aplica aqui) e faz a parte util dele por conta propria:
+# pergunta o tema. A escolha vai pro settings.local.json (git-ignored), que
+# vence o settings.json versionado via --settings.
 $StateFile = Join-Path $GlmHome ".claude.json"
 if (-not (Test-Path $StateFile)) {
-    '{ "hasCompletedOnboarding": true, "theme": "dark" }' | Set-Content -Path $StateFile -Encoding Ascii
+    $Theme = "dark"
+    if (-not $IsPrintMode) {
+        Write-Host ""
+        Write-Host "[glm] Tema do GLM Harness:" -ForegroundColor Magenta
+        Write-Host "[glm]   1) Escuro (padrao)   2) Claro   3) Escuro daltonico   4) Claro daltonico"
+        $themeChoice = Read-Host "[glm] Escolha (Enter = 1)"
+        switch ("$themeChoice".Trim()) {
+            "2" { $Theme = "light" }
+            "3" { $Theme = "dark-daltonized" }
+            "4" { $Theme = "light-daltonized" }
+        }
+    }
+    ('{ "hasCompletedOnboarding": true, "theme": "' + $Theme + '" }') | Set-Content -Path $StateFile -Encoding Ascii
+    $LocalSettingsFile = Join-Path $GlmHome "settings.local.json"
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    if (Test-Path $LocalSettingsFile) {
+        try {
+            $localSettings = Get-Content $LocalSettingsFile -Raw | ConvertFrom-Json
+            $localSettings | Add-Member -NotePropertyName "theme" -NotePropertyValue $Theme -Force
+            [System.IO.File]::WriteAllText($LocalSettingsFile, ($localSettings | ConvertTo-Json -Depth 10), $Utf8NoBom)
+        } catch { }
+    } else {
+        [System.IO.File]::WriteAllText($LocalSettingsFile, ('{ "theme": "' + $Theme + '" }'), $Utf8NoBom)
+    }
 }
 
 # Primeiro uso: semeia a memoria global do GLM (pessoal -> fica fora do git;

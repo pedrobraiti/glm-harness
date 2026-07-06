@@ -22,14 +22,14 @@ Comando `glm` que abre a experiência completa do Claude Code rodando **GLM 5.2*
 
 > Free tier: ~2 requisições simultâneas em voo; bloqueios 429 se estendem a cada contato. O harness já traz um rate limiter que administra isso sozinho.
 
-## Passo 2 — Clonar e configurar segredos
+## Passo 2 — Clonar
 
 ```powershell
 git clone https://github.com/pedrobraiti/glm-harness.git
 cd glm-harness
-Copy-Item .env.example .env
-# edite .env e preencha: NVIDIA_API_KEY=nvapi-...
 ```
+
+> A chave **não** precisa ser configurada na mão: o primeiro `glm` roda um wizard de login que abre a página da chave no navegador, pede para colar no terminal, **valida na NVIDIA** e grava `.env` + config do router sozinho. Dentro do glm, o comando `/login` refaz esse fluxo (ex.: trocar de chave).
 
 ## Passo 3 — Adaptar caminhos absolutos (IMPORTANTE)
 
@@ -38,6 +38,7 @@ O repo foi criado em `C:\Users\ACS Gamer\Documents\vscode-local\glm-harness`. Fa
 - `glm-home\CLAUDE.md` (tabela de autoconfiguração do GLM)
 - `glm-home\settings.json` (comandos dos hooks)
 - `glm-home\hooks\notify-alert.sh` (caminho do log)
+- `glm-home\commands\login.md` (caminho do `glm-login.ps1`)
 
 Substitua também o nome de usuário nas referências a `$PROFILE`/`%APPDATA%` se aparecerem.
 
@@ -49,7 +50,7 @@ Além disso, o `glm-home\CLAUDE.md` importa `@rules/ESSENTIALS.md`, que **não v
 npm install -g @musistudio/claude-code-router
 ```
 
-Crie `~\.claude-code-router\config.json` a partir de `reference\ccr-config.template.json`, colando a chave `nvapi-` do `.env` no campo `api_key`.
+A config (`~\.claude-code-router\config.json`) é criada automaticamente pelo wizard de login do primeiro `glm`, a partir de `reference\ccr-config.template.json` — nada a fazer aqui além do install.
 
 ## Passo 5 — Binário com branding GLM
 
@@ -96,6 +97,12 @@ O settings do GLM habilita os plugins `github` e `rust-analyzer-lsp`; se a pasta
 
 ```powershell
 # num terminal NOVO (para o $PROFILE recarregar):
+glm    # primeiro uso: wizard de login (chave NVIDIA validada ao vivo) + escolha de tema
+```
+
+No primeiro `glm` interativo o wizard pergunta o **tema** (escuro/claro/daltônico) e faz o **login** (abre a página da chave, valida, grava tudo). Depois disso:
+
+```powershell
 glm -p "Em uma linha: qual modelo você é?"
 # esperado: resposta se identificando como GLM 5.2
 glm    # sessão interativa: banner roxo "GLM Harness"

@@ -12,6 +12,8 @@ glm -p "pergunta"   # modo print, sem sessão
 claude              # Claude normal, assinatura Max — não é afetado
 ```
 
+No **primeiro uso** o launcher roda um wizard: escolha de tema + "login" (abre a página da chave da NVIDIA no navegador, valida a chave colada e grava `.env` + config do router). Dentro do glm, **`/login`** refaz o fluxo (ex.: trocar de chave).
+
 O comando existe como função no `$PROFILE` do PowerShell e como `glm.cmd` em `%APPDATA%\npm` (funciona em qualquer shell).
 
 ## Arquitetura
@@ -44,10 +46,10 @@ Veja **[`INSTALL.md`](INSTALL.md)** — guia completo, escrito para ser executad
 
 ```powershell
 npm install -g @musistudio/claude-code-router
-# criar ~/.claude-code-router/config.json (provider nvidia + chave do .env; ver docs/02)
 npm install --prefix vendor @anthropic-ai/claude-code@2.1.200
 node launcher/apply-glm-branding.mjs
 # função glm no $PROFILE + glm.cmd em %APPDATA%\npm apontando pro launcher/glm.ps1
+# a config do router (~/.claude-code-router/config.json) é criada pelo wizard de login do primeiro `glm`
 ```
 
 Segredos: `.env` (git-ignored, espelhado em `.env.example`) guarda a `NVIDIA_API_KEY`.
