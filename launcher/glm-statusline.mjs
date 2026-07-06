@@ -104,12 +104,12 @@ async function limiterSegment() {
     if (health.queued > 0) {
       return `${YELLOW}fila: ${health.queued}${RESET}`;
     }
-    // Medidor de cota diária: aparece a partir de 50% (amarelo a partir de 80%).
-    if (rpd?.budget > 0 && rpd.used >= rpd.budget * 0.5) {
+    // Medidor de cota diária: sempre visível (discreto; amarelo a partir de 80%).
+    if (rpd?.budget > 0) {
       const color = rpd.used >= rpd.budget * 0.8 ? YELLOW : DIM;
       return `${color}▮ ${rpd.used}/${rpd.budget} req/dia${RESET}`;
     }
-    return null; // tudo normal -> statusline limpa
+    return null; // limiter sem info de cota -> statusline limpa
   } catch {
     return null; // limiter fora do ar / lento -> não polui a linha
   }
