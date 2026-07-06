@@ -4,7 +4,25 @@
 > de forma relativamente detalhada. É o PRIMEIRO arquivo que a próxima sessão lê.
 > Mantenha-o vivo e específico — detalhado o bastante para retomar sem reconstruir o raciocínio.
 
-**Última atualização:** 2026-07-05 (settings.local.json — overrides pessoais git-ignored + LICENSE MIT)
+**Última atualização:** 2026-07-06 madrugada (pós-incidente 429: limiter v3 + sonda única + perfil gentil; usuário testa de manhã)
+
+## ⚡ PLAYBOOK — LEIA PRIMEIRO se o usuário reportar erro no glm hoje (2026-07-06)
+
+**Contexto de ontem:** um incidente (bug de deadlock no limiter + manutenção ao vivo + tempestades de retry) queimou a boa vontade do free tier da NVIDIA. O estado deve amanhecer limpo. Correções estruturais já aplicadas: deadlock impossível (v3), exatamente UMA sonda por janela de cooldown (`d562db6`), perfil gentil `1 em voo / 90s` no `limiter-config.json` (hot-reload), `/login` não reinicia mais o ccr se a chave não mudou.
+
+**Fatos MEDIDOS do free tier (provados, citáveis):**
+- Limite real = **concorrência ~2 em voo**, NÃO requisições/min (21 sequenciais em 43s passam todas; 64 juntas → só 2 passam). O "40 RPM" do site é genérico; para z-ai/glm-5.2 vale o corte por capacidade.
+- O 429 vem **sem NENHUM header** (sem retry-after, sem x-ratelimit-*) — impossível saber quanto falta ou quanto esperar; só empirismo.
+- O castigo tem MEMÓRIA: cada contato durante o bloqueio rearma/aprofunda a janela. Pós-tempestade, medimos: 6-16 min de silêncio NÃO bastam; **~35 min de silêncio total limpou** (sonda 200 às 03:35Z); poucas requisições rearmaram na sequência.
+
+**Se o usuário reportar erro, diagnostique nesta ordem (nada disso toca a NVIDIA):**
+1. `Invoke-RestMethod http://127.0.0.1:3457/glm-limiter/health` → `{inFlight, queued, cooldownUntil}`. inFlight>0 com fila parada por muito tempo NÃO deve mais acontecer (era o deadlock, corrigido) — se vir isso, é bug NOVO no limiter.
+2. `logs\limiter.log` (tail): `429/rate-limit (tentativa N/12)` = free tier bloqueado, funcionamento normal do limiter (silêncio escalonado 90→180→270→360s), NÃO é bug. `cliente desistiu` = usuário deu Esc/fechou (cada desistir+reenviar rearma o bloqueio — oriente a NÃO fazer isso). `erro de conexão com o router` = ccr caiu → `ccr status` / `ccr restart` (NUNCA com requisição em voo — checar health 0/0 antes).
+3. "✻ API error · Retrying attempt N/10" no terminal = timeout do CLIENTE por cima da espera silenciosa do limiter = bloqueio longo em curso. Não é o limiter falhando; é a espera passando do limite de paciência do cliente.
+4. Para saber se a NVIDIA está bloqueada SEM rajada, sonda única direta (bypass da cadeia): `node -e "const k=require('fs').readFileSync('C:/Users/ACS Gamer/Documents/vscode-local/glm-harness/.env','utf8').match(/NVIDIA_API_KEY=(\S+)/)[1];fetch('https://integrate.api.nvidia.com/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+k,'Content-Type':'application/json'},body:JSON.stringify({model:'z-ai/glm-5.2',messages:[{role:'user',content:'ping'}],max_tokens:3})}).then(r=>console.log('STATUS',r.status))"` → 200 = livre; 429 = bloqueado (prescrever 35-40 min de silêncio TOTAL e re-sondar UMA vez).
+5. Statusline roxo mostra `⏸ 429 · retoma em Xs` quando o limiter está em cooldown — é o "aviso" oficial ao usuário.
+- Ajustes ao vivo: `/requisitions` dentro do glm ou editar `limiter-config.json` (hot-reload). Perfil rápido de volta: `/requisitions 2 75` (só quando estabilizar por dias).
+- Se 429 persistir por dias em uso normal → Caminho A: provider pago da z.ai na config do ccr (~2 min de troca, docs/02).
 
 ## REPO PÚBLICO — CONCLUÍDO ✔
 `pedrobraiti/glm-harness` foi tornado **público** após conferência final de segurança: (1) grep de padrões de chave real (sk-proj-/sk-ant-/AIzaSy/nvapi-/ghp_/etc.) em TODOS os commits (`git rev-list --all`) → zero hits reais, só menções ao prefixo `nvapi-` na doc; (2) remoto tem só `master` no mesmo commit pós-expurgo (nenhuma branch/tag velha com o histórico contaminado); (3) `.env`, `glm-home/rules/ESSENTIALS.md` (chaves reais), memórias e `vendor/` fora do git e no .gitignore; (4) templates com placeholder. Reprodutibilidade confirmada: INSTALL.md cobre chave NVIDIA → .env → search&replace de caminhos → ccr → vendor+patch → comando glm → teste. Pendência sugerida ao usuário: adicionar LICENSE (repo sem licença = juridicamente "todos os direitos reservados").

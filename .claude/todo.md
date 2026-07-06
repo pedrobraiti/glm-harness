@@ -3,9 +3,11 @@
 Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 
 ## Em progresso
-(nada — núcleo + rate limiter entregues)
+- [ ] **2026-07-06: usuário testa o glm de manhã** (cota da NVIDIA descansada + limiter v3/sonda única/perfil 1-90). Se erro: seguir o PLAYBOOK no topo do handoff. Se dia normal por alguns dias: considerar `/requisitions 2 75` de volta
 
 ## Próximas
+- [ ] Voltar perfil rápido do limiter (`/requisitions 2 75`) quando o free tier estabilizar por alguns dias
+- [ ] (opcional/backlog) Morcego de verdade no boneco do banner: exige reverse-engineering dos bitmaps numéricos no bytecode (paleta `▀▄█▌▐░▒▓` localizada; strings de arte só existem na intro de onboarding, que o harness pula)
 - [ ] Teste interativo real (sessão `glm` aberta pelo usuário): confirmar visual roxo/"GLM Harness" e observar o limiter sob rajadas reais
 - [ ] Deletar repo antigo `pedrobraiti/OpenSource-LLM-on-ClaudeCode` — bloqueado: o `gh` precisa do escopo `delete_repo`; o usuário deve rodar `gh auth refresh -h github.com -s delete_repo` e depois `gh repo delete pedrobraiti/OpenSource-LLM-on-ClaudeCode --yes`
 - [ ] Remover a raiz vazia `..\OS-CC-MCP` (conteúdo já apagado; raiz presa por outro processo — some ao fechar o processo que a segura)
@@ -46,4 +48,8 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 - [x] LICENSE MIT na raiz
 - [x] settings.local.json (git-ignored) para overrides pessoais via --settings no launcher; settings.json versionado sem bypassPermissions; validado ao vivo
 - [x] Limiter v3: corrigido deadlock por slot vazado (pipe→pipeline com callback garantido; abort do upstream quando cliente desiste; timeout de 15min de segurança); /login não reinicia mais o ccr se a chave não mudou
+- [x] Limiter: exatamente UMA sonda por janela de cooldown (re-checagem do cooldown após adquirir slot — antes, fila cheia soltava várias na virada e estendia o bloqueio)
+- [x] Perfil gentil do limiter (1 em voo / 90s) após incidente de cota — margem sob o teto medido de ~2
+- [x] Blindagem de identidade visual via --settings (pasta home herdava settings global da Claude como settings de projeto: tema light-ansi, statusline vibe-ads, model claude)
+- [x] Medições novas do free tier documentadas no handoff: 429 sem headers (provado), castigo com memória, ~35min de silêncio limpa pós-tempestade
 - [x] Wizard de login no primeiro uso (launcher/glm-login.ps1): abre página da chave NVIDIA no navegador, valida a chave ao vivo no endpoint, grava .env + config do router (atualiza em lugar se existir), reinicia ccr; pergunta de tema no primeiro run (grava no settings.local.json); comando /login no glm-home refaz o fluxo; INSTALL/README simplificados; caminhos feliz e de chave inválida testados
