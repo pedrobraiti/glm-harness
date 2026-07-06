@@ -10,9 +10,10 @@ Comando `glm` que abre a experiência completa do Claude Code rodando **GLM 5.2*
 
 - Windows 10/11 com PowerShell
 - **Node.js 18+** (`node --version`)
-- **Claude Code** instalado e funcional (`claude --version`) — usado só como bootstrapper e para o Git Bash que o acompanha (os hooks são scripts bash)
-- **git** (`git --version`)
+- **git** (`git --version`) — o Git for Windows traz o Git Bash, usado pelos hooks
 - Uma **chave de API da NVIDIA (gratuita)** — ver passo 1
+
+> **Claude Code NÃO é pré-requisito** — nem conta/assinatura Anthropic. O harness baixa e vendoriza o próprio binário direto do npm (passo 5) e roda 100% pela NVIDIA. Ter um Claude Code instalado só é útil se você quiser que *ele* execute este guia por você (recomendado, mas qualquer humano/agente consegue seguir os passos).
 
 ## Passo 1 — Chave da NVIDIA (única coisa que o humano precisa fazer)
 
