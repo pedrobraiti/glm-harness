@@ -18,9 +18,10 @@ async function readStdin() {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-// Janela real do GLM 5.2 (o Claude Code assume 200k para modelo desconhecido,
-// então calculamos a porcentagem por conta própria a partir dos tokens usados).
-const WINDOW_SIZE = Number(process.env.GLM_CONTEXT_WINDOW || 1000000);
+// Janela EFETIVA no endpoint gratuito da NVIDIA: ~202k físicos (HTTP 500
+// acima disso), então operamos com 180k de margem. O launcher seta a env;
+// calculamos a porcentagem por conta própria a partir dos tokens usados.
+const WINDOW_SIZE = Number(process.env.GLM_CONTEXT_WINDOW || 180000);
 
 // O router não propaga o usage no modo streaming (chega tudo zerado), então
 // quando os tokens oficiais forem 0 estimamos pelo transcript da sessão:
@@ -82,8 +83,18 @@ async function limiterSegment() {
     if (cooldownMs > 0) {
       return `${RED}⏸ 429 · retoma em ${Math.ceil(cooldownMs / 1000)}s${RESET}`;
     }
+    const rpd = health.rpd;
+    if (rpd?.budget > 0 && rpd.used >= rpd.budget) {
+      const mins = Math.max(1, Math.ceil((rpd.oldestFreesInSeconds || 0) / 60));
+      return `${RED}⏸ cota diária ${rpd.used}/${rpd.budget} · abre em ~${mins}min${RESET}`;
+    }
     if (health.queued > 0) {
       return `${YELLOW}fila: ${health.queued}${RESET}`;
+    }
+    // Medidor de cota diária: aparece a partir de 50% (amarelo a partir de 80%).
+    if (rpd?.budget > 0 && rpd.used >= rpd.budget * 0.5) {
+      const color = rpd.used >= rpd.budget * 0.8 ? YELLOW : DIM;
+      return `${color}▮ ${rpd.used}/${rpd.budget} req/dia${RESET}`;
     }
     return null; // tudo normal -> statusline limpa
   } catch {

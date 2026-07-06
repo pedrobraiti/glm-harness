@@ -15,7 +15,7 @@
 
 import http from 'node:http';
 import { pipeline } from 'node:stream';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,7 +24,33 @@ const configPath = join(here, '..', 'limiter-config.json');
 
 const PORT = 3457;
 const UPSTREAM = { host: '127.0.0.1', port: 3456 };
-const DEFAULTS = { maxConcurrent: 2, cooldownSeconds: 75, maxAttempts: 12 };
+const DEFAULTS = { maxConcurrent: 2, cooldownSeconds: 75, maxAttempts: 12, dailyBudget: 950 };
+
+// Cota diária LOCAL (janela móvel de 24h, persistida em disco): o free tier
+// da NVIDIA tem um teto empírico de ~1000 requisições/dia que bloqueia a
+// conta inteira ao ser estourado. Contamos cada contato real com o upstream
+// e travamos ANTES da parede (dailyBudget, default 950).
+const DAY_MS = 86_400_000;
+const ledgerPath = join(here, '..', 'logs', 'rpd-ledger.json');
+let rpdLedger = [];
+try {
+  rpdLedger = JSON.parse(readFileSync(ledgerPath, 'utf8')).filter(t => Date.now() - t < DAY_MS);
+} catch { /* primeiro uso: começa vazio */ }
+let rpdGateActive = false;
+
+function pruneLedger() {
+  const cutoff = Date.now() - DAY_MS;
+  while (rpdLedger.length > 0 && rpdLedger[0] < cutoff) rpdLedger.shift();
+}
+
+function recordUpstreamContact() {
+  pruneLedger();
+  rpdLedger.push(Date.now());
+  try {
+    mkdirSync(join(here, '..', 'logs'), { recursive: true });
+    writeFileSync(ledgerPath, JSON.stringify(rpdLedger));
+  } catch { /* sem disco, a contagem segue em memória */ }
+}
 
 function loadConfig() {
   try {
@@ -116,8 +142,22 @@ function looksLikeRateLimit(status, bodyText) {
 
 const server = http.createServer(async (req, res) => {
   if (req.url === '/glm-limiter/health') {
+    pruneLedger();
+    const { dailyBudget } = loadConfig();
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, inFlight, queued: waiters.length, cooldownUntil }));
+    res.end(JSON.stringify({
+      ok: true,
+      inFlight,
+      queued: waiters.length,
+      cooldownUntil,
+      rpd: {
+        used: rpdLedger.length,
+        budget: dailyBudget,
+        oldestFreesInSeconds: rpdLedger.length > 0
+          ? Math.max(0, Math.ceil((rpdLedger[0] + DAY_MS - Date.now()) / 1000))
+          : 0,
+      },
+    }));
     return;
   }
 
@@ -149,11 +189,25 @@ const server = http.createServer(async (req, res) => {
         log(`cliente desistiu — abortando retries da requisição (tentativa ${attempt})`);
         return;
       }
+      // Trava preventiva da cota diária: parar 50 antes da parede custa uma
+      // espera visível; bater na parede custa a conta bloqueada por horas.
+      pruneLedger();
+      const { dailyBudget } = loadConfig();
+      if (dailyBudget > 0 && rpdLedger.length >= dailyBudget) {
+        if (!rpdGateActive) {
+          rpdGateActive = true;
+          log(`cota diária local atingida (${rpdLedger.length}/${dailyBudget} em 24h móveis) — segurando chamadas até a janela abrir`);
+        }
+        await sleep(30_000);
+        continue;
+      }
+      rpdGateActive = false;
       await acquireSlot();
       if (Date.now() >= cooldownUntil) break;
       releaseSlot();
     }
     try {
+      recordUpstreamContact();
       const upstreamRes = await forward(req, body, r => { activeUpstreamReq = r; });
       const status = upstreamRes.statusCode;
 
@@ -161,14 +215,17 @@ const server = http.createServer(async (req, res) => {
         const errBody = await readAll(upstreamRes);
         const errText = errBody.toString('utf8');
         if (looksLikeRateLimit(status, errText) && attempt < maxAttempts) {
-          // Escala pelo contador GLOBAL de 429s seguidos (teto 20x = 30min
-          // com base 90s): bloqueio raso resolve rápido; bloqueio profundo
-          // ganha janelas de silêncio grandes o bastante para expirar.
+          // Backoff EXPONENCIAL com jitter pelo contador GLOBAL de 429s
+          // seguidos: 90s, 180s, 360s... teto 30min. O gateway da NVIDIA
+          // REINICIA o castigo a cada contato, então chegar rápido a janelas
+          // longas de silêncio é o que deixa bloqueios profundos expirarem;
+          // o ruído aleatório evita sondas em padrão previsível.
           const { cooldownSeconds } = loadConfig();
           consecutiveRateLimits++;
-          const escalated = cooldownSeconds * Math.min(consecutiveRateLimits, 20);
-          cooldownUntil = Math.max(cooldownUntil, Date.now() + escalated * 1000);
-          log(`429/rate-limit do upstream (${consecutiveRateLimits} seguidos; tentativa ${attempt}/${maxAttempts}) -> silêncio total por ${escalated}s, retomo sozinho`);
+          const exponential = cooldownSeconds * 2 ** Math.min(consecutiveRateLimits - 1, 10);
+          const jittered = Math.round(Math.min(exponential, 1800) * (0.85 + Math.random() * 0.3));
+          cooldownUntil = Math.max(cooldownUntil, Date.now() + jittered * 1000);
+          log(`429/rate-limit do upstream (${consecutiveRateLimits} seguidos; tentativa ${attempt}/${maxAttempts}) -> silêncio total por ${jittered}s, retomo sozinho`);
           continue;
         }
         // Upstream respondeu (ainda que com erro não-429): não está bloqueado.

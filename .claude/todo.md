@@ -49,6 +49,8 @@ Plano vivo do projeto. Tarefas e subtarefas, marcadas conforme concluídas.
 - [x] settings.local.json (git-ignored) para overrides pessoais via --settings no launcher; settings.json versionado sem bypassPermissions; validado ao vivo
 - [x] Limiter v3: corrigido deadlock por slot vazado (pipe→pipeline com callback garantido; abort do upstream quando cliente desiste; timeout de 15min de segurança); /login não reinicia mais o ccr se a chave não mudou
 - [x] Limiter: exatamente UMA sonda por janela de cooldown (re-checagem do cooldown após adquirir slot — antes, fila cheia soltava várias na virada e estendia o bloqueio)
+- [x] Limiter: escalada global com memória de 429s consecutivos (retry do cliente não zera mais a escada — era o que auto-sustentava bloqueios a noite inteira)
+- [x] Limiter v5 (pós-deep-research): trava de cota diária ~1000 RPD (ledger 24h móveis persistido, gate em 950, medidor na statusline), backoff exponencial+jitter (teto 30min), contexto 1M→180k (endpoint grátis corta em ~202k com HTTP 500 — bomba desarmada antes de explodir)
 - [x] Perfil gentil do limiter (1 em voo / 90s) após incidente de cota — margem sob o teto medido de ~2
 - [x] Blindagem de identidade visual via --settings (pasta home herdava settings global da Claude como settings de projeto: tema light-ansi, statusline vibe-ads, model claude)
 - [x] Medições novas do free tier documentadas no handoff: 429 sem headers (provado), castigo com memória, ~35min de silêncio limpa pós-tempestade

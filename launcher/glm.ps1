@@ -155,11 +155,14 @@ $env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1"
 $env:MAX_THINKING_TOKENS = "0"
 $env:CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"
 
-# Janela de contexto de 1M: o Claude Code assume 200k para modelo que ele nao
-# conhece e auto-compactaria cedo demais. Estes dois andam juntos: o
-# auto-compact passa a mirar 1M e o statusline mede a barra contra o mesmo 1M.
-$env:CLAUDE_CODE_AUTO_COMPACT_WINDOW = "1000000"
-$env:GLM_CONTEXT_WINDOW = "1000000"
+# Janela de contexto: o GLM 5.2 suporta 1M, mas o endpoint GRATUITO da NVIDIA
+# corta em ~202k tokens e falha com HTTP 500 generico acima disso (limite
+# fisico dos nos compartilhados, confirmado pela comunidade). 180k da margem
+# para o auto-compact agir ANTES do precipicio. Estes dois andam juntos: o
+# auto-compact mira 180k e o statusline mede a barra contra o mesmo valor.
+# (Se um dia migrar para endpoint pago com 1M real, suba os dois.)
+$env:CLAUDE_CODE_AUTO_COMPACT_WINDOW = "180000"
+$env:GLM_CONTEXT_WINDOW = "180000"
 
 # Overrides LOCAIS de settings (git-ignored): preferencias pessoais que nao
 # devem ir pro GitHub (ex.: permissions.defaultMode=bypassPermissions). Entra

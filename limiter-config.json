@@ -1,5 +1,6 @@
 {
   "maxConcurrent": 1,
   "cooldownSeconds": 90,
-  "maxAttempts": 12
+  "maxAttempts": 12,
+  "dailyBudget": 950
 }
